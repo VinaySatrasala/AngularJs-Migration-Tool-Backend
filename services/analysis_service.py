@@ -25,13 +25,20 @@ class AnalysisService:
         db = next(get_db())
         try:
             # Create analysis directory if it doesn't exist
-            analysis_path = str(Path(project_path).parent / "analysis")
-            os.makedirs(analysis_path, exist_ok=True)
+            output_dir = Path(f"output/{project_id}")
+            output_dir.mkdir(parents=True, exist_ok=True)
+        
+            analysis_dir = output_dir / "analysis"
+            analysis_dir.mkdir(parents=True, exist_ok=True)
+            
+            analysis_file = analysis_dir / f"{project_id}_analysis.json"
+            react_structure_file = output_dir / "react_migration_structure.json"
             
             # Run the analyzer
             analyzer = AngularProjectAnalyzer(
                 project_path=project_path,
-                output_file=str(Path(analysis_path) / f"{project_id}_analysis.json")
+                project_id=project_id,
+                output_file=str(analysis_file)
             )
             analysis_results = await analyzer.analyze_project()
             
@@ -42,11 +49,11 @@ class AnalysisService:
             
             # Generate target structure
             target_generator = ReactMigrationStructureGenerator(
-                analysis_file=str(Path(analysis_path) / f"{project_id}_analysis.json"),
+                analysis_file=str(analysis_file),
                 llm_config=llm_config,
-                project_id=project_id
+                project_id=project_id,
             )
-            target_structure = await target_generator.generate_migration_structure()
+            target_structure = await target_generator.generate_react_structure()
             
             # Save target structure to database and get the saved instance
             structure_instance = MigrationDBService.save_target_structure(db, project_id, target_structure)
@@ -54,14 +61,13 @@ class AnalysisService:
                 raise Exception("Failed to save target structure to database")
             
             # Generate React components
-            output_dir = str(Path(analysis_path) / "react_output")
             react_generator = ReactComponentGenerator(
-                migration_file=target_generator.output_file,
-                analysis_file=str(Path(analysis_path) / f"{project_id}_analysis.json"),
-                output_dir=output_dir,
+                migration_file=str(react_structure_file),
+                analysis_file=str(analysis_file),
+                output_dir=output_dir / "react_output",
                 llm_config=llm_config
             )
-            await react_generator.generate_project()
+            await react_generator.generate_all_components()
             
             return {
                 "status": "success",

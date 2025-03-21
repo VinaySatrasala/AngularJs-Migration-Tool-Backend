@@ -6,3 +6,6 @@ __pycache__
 *.pyd
 *.db
 .venv
+
+output
+uploads

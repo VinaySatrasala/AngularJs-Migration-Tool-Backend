@@ -1,0 +1,169 @@
+{
+  "project_structure": {
+    "root": {
+      "description": "The root directory contains project metadata, configuration files, and the main entry points.",
+      "files": {
+        "package.json": {
+          "file_type": "json",
+          "purpose": "Defines project metadata, dependencies, scripts, and configuration settings."
+        },
+        "README.md": {
+          "file_type": "markdown",
+          "purpose": "Documentation file explaining the project setup and usage."
+        }
+      }
+    },
+    "public": {
+      "description": "Contains static files such as the main HTML entry point, icons, and assets.",
+      "files": {
+        "index.html": {
+          "file_type": "html",
+          "purpose": "Root HTML file where the React app is mounted."
+        },
+        "favicon.ico": {
+          "file_type": "ico",
+          "purpose": "Website favicon."
+        }
+      }
+    },
+    "src": {
+      "description": "Contains all React-related source code, including components, pages, and assets.",
+      "subdirectories": {
+        "components": {
+          "description": "Reusable UI components such as buttons, headers, and footers.",
+          "files": {
+            "Navbar.js": {
+              "file_name": "Navbar.js",
+              "relative_path": "src/components/Navbar.js",
+              "file_type": "js",
+              "dependencies": [
+                "index.html"
+              ],
+              "migration_suggestion": "Convert the navigation bar from index.html to a React component using JSX. Use React Router's Link component for navigation.",
+              "routing_info": "Use React Router's Link component for navigation links."
+            }
+          }
+        },
+        "pages": {
+          "description": "Full-page components that represent different views of the application.",
+          "files": {
+            "Home.js": {
+              "file_name": "Home.js",
+              "relative_path": "src/pages/Home.js",
+              "file_type": "js",
+              "dependencies": [
+                "app\\components\\home\\home.controller.js",
+                "app\\components\\home\\home.view.html"
+              ],
+              "migration_suggestion": "Convert the HomeController and home.view.html to a functional component using React hooks for state management.",
+              "routing_info": "This component will be a route in the React Router setup."
+            },
+            "Products.js": {
+              "file_name": "Products.js",
+              "relative_path": "src/pages/Products.js",
+              "file_type": "js",
+              "dependencies": [
+                "app\\components\\products\\products.controller.js",
+                "app\\components\\products\\products.view.html"
+              ],
+              "migration_suggestion": "Convert the ProductsController and products.view.html to a functional component. Use hooks to fetch and manage product data.",
+              "routing_info": "This component will be a route in the React Router setup."
+            },
+            "About.js": {
+              "file_name": "About.js",
+              "relative_path": "src/pages/About.js",
+              "file_type": "js",
+              "dependencies": [
+                "app\\components\\about\\about.controller.js",
+                "app\\components\\about\\about.view.html"
+              ],
+              "migration_suggestion": "Convert the AboutController and about.view.html to a functional component using React hooks.",
+              "routing_info": "This component will be a route in the React Router setup."
+            }
+          }
+        },
+        "routes": {
+          "description": "Defines the routing structure of the application.",
+          "files": {
+            "AppRoutes.js": {
+              "file_name": "AppRoutes.js",
+              "relative_path": "src/routes/AppRoutes.js",
+              "file_type": "js",
+              "dependencies": [
+                "app\\app.config.js"
+              ],
+              "migration_suggestion": "Use React Router to define routes for Home, Products, and About pages. Implement a fallback route for unmatched URLs.",
+              "routing_info": "Handles all route definitions using React Router."
+            }
+          }
+        },
+        "services": {
+          "description": "Handles API requests and business logic.",
+          "files": {
+            "useProducts.js": {
+              "file_name": "useProducts.js",
+              "relative_path": "src/services/useProducts.js",
+              "file_type": "js",
+              "dependencies": [
+                "app\\services\\products.service.js"
+              ],
+              "migration_suggestion": "Convert the productsService to a custom React hook that fetches product data.",
+              "routing_info": "Not directly related to routing."
+            }
+          }
+        },
+        "styles": {
+          "description": "Contains global and component-specific styles.",
+          "files": {
+            "styles.css": {
+              "file_name": "styles.css",
+              "relative_path": "src/styles/styles.css",
+              "file_type": "css",
+              "dependencies": [
+                "assets\\css\\styles.css"
+              ],
+              "migration_suggestion": "Migrate global styles to CSS modules or CSS-in-JS for component-specific styling.",
+              "routing_info": "Not related to routing."
+            }
+          }
+        }
+      }
+    },
+    "file_name": "project_structure",
+    "relative_path": "project_structure",
+    "file_type": "",
+    "dependencies": [],
+    "migration_suggestion": "Create this file based on React best practices",
+    "routing_info": "Not applicable"
+  },
+  "package.json": {
+    "file_name": "package.json",
+    "relative_path": "package.json",
+    "file_type": "json",
+    "dependencies": [],
+    "migration_suggestion": "Create this file based on React best practices",
+    "routing_info": "Not applicable"
+  },
+  "src/index.js": {
+    "file_name": "index.js",
+    "relative_path": "src/index.js",
+    "file_type": "js",
+    "dependencies": [],
+    "migration_suggestion": "Create this file based on React best practices",
+    "routing_info": "Not applicable"
+  },
+  "src/App.js": {
+    "file_name": "App.js",
+    "relative_path": "src/App.js",
+    "file_type": "js",
+    "dependencies": [],
+    "migration_suggestion": "Create this file based on React best practices",
+    "routing_info": "Define routes here"
+  },
+  "__metadata__": {
+    "project_id": "20250321_134239_35464fe8",
+    "generated_at": "2025-03-21T13:43:38.598554",
+    "version": "1.0",
+    "total_files": 3
+  }
+}

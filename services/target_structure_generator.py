@@ -92,47 +92,49 @@ class ReactMigrationStructureGenerator:
         Returns:
             String containing the prompt for the AI
         """
-        prompt = """Generate a valid JSON object describing a React project structure for migrating an AngularJS application.
-The output must be a JSON object with a 'project_structure' key at the root level.
+        prompt = """Analyze the following AngularJS project and generate a React migration structure.
 
 Here is the AngularJS project analysis:
 ```json
 {json_data}
 ```
 
-The output must follow this exact format:
+Generate a flat JSON object where each key is a target React file path. The structure must follow this format:
+
 {
-    "project_structure": {
-        "root": {
-            "description": "Root directory containing project configuration",
-            "files": {
-                "package.json": {
-                    "file_type": "json",
-                    "purpose": "Project dependencies and scripts"
-                }
-            }
-        },
-        "src": {
-            "description": "Source code directory",
-            "subdirectories": {
-                "components": {
-                    "description": "React components",
-                    "files": {}
-                }
-            }
-        }
-    }
+  "[file_path]": {
+    "file_name": "Name of the file",
+    "relative_path": "Path from project root",
+    "file_type": "File extension (no dot)",
+    "dependencies": [
+      "List of files/packages this file depends on in React",
+      "Include both npm packages and local files"
+    ],
+    "source_files": [
+      "List of original AngularJS files required for migrating this file"
+    ],
+    "description": "Purpose of this file",
+    "migration_suggestions": "How to convert from AngularJS equivalent",
+    "routing_info": "Routing-related details if applicable"
+  }
 }
 
-Important rules:
-1. Response must be ONLY the JSON object, no other text
-2. Every file must have 'file_type' and 'purpose' fields
-3. Every directory must have 'description' and either 'files' or 'subdirectories'
-4. Use modern React practices (functional components, hooks)
-5. Include necessary configuration files (package.json, etc.)
-6. Map AngularJS components to React equivalents
+Dependencies should include:
+- NPM packages needed (react, react-router-dom, etc.)
+- Local files imported/used by this file
+- CSS and asset files directly imported
+- Parent components that use this file
+- Child components rendered by this file
 
-DO NOT include any explanations or text outside the JSON object."""
+For each AngularJS file in the analysis:
+1. Create equivalent React file(s)
+2. Map controllers to functional components
+3. Convert services to hooks or context
+4. Transform templates to JSX
+5. Update routing configuration
+6. Include all necessary dependencies
+
+Return ONLY the JSON object with the complete file structure."""
 
         # Format the prompt with the analysis data
         formatted_prompt = prompt.replace("{json_data}", json.dumps(self.analysis_data, indent=2))
@@ -151,14 +153,12 @@ DO NOT include any explanations or text outside the JSON object."""
         try:
             # Use langchain LLM for structured output
             logger.info("Sending prompt to LLM...")
-            messages = [
-                {"role": "system", "content": "You are a React migration expert. Always respond with valid JSON only."},
-                {"role": "user", "content": prompt}
-            ]
-            response = await self.llm_config._langchain_llm.agenerate(messages=[messages])
             
-            # Get the response text
-            response_text = response.generations[0][0].text.strip()
+            # Add system message to the prompt
+            full_prompt = "You are a React migration expert. Always respond with valid JSON only.\n\n" + prompt
+            response_text = await self.llm_config._langchain_llm.apredict(full_prompt)
+            response_text = response_text.strip()
+            
             logger.info("Received response from LLM")
             
             # Try to find JSON in the response
@@ -210,44 +210,87 @@ DO NOT include any explanations or text outside the JSON object."""
             if not isinstance(structure, dict):
                 raise ValueError("Structure must be a dictionary")
                 
-            # Ensure we have a project_structure key
-            if "project_structure" not in structure:
-                logger.warning("Missing project_structure key, wrapping response")
-                structure = {"project_structure": structure}
-                
-            # Validate project structure
-            project_structure = structure["project_structure"]
-            if not isinstance(project_structure, dict):
-                raise ValueError("project_structure must be a dictionary")
-                
-            # Validate required directories
-            required_dirs = ["root", "src"]
-            for dir_name in required_dirs:
-                if dir_name not in project_structure:
-                    logger.warning(f"Missing {dir_name} directory, adding default")
-                    project_structure[dir_name] = {
-                        "description": f"{dir_name} directory",
-                        "files": {}
+            # Required files that must exist
+            required_files = {
+                "index.html": {
+                    "relative_path": "public/index.html",
+                    "file_type": "html",
+                    "source_files": ["index.html"]
+                },
+                "package.json": {
+                    "relative_path": "package.json",
+                    "file_type": "json",
+                    "source_files": []
+                },
+                "src/App.js": {
+                    "relative_path": "src/App.js",
+                    "file_type": "js",
+                    "source_files": ["app.module.js", "app.config.js"]
+                },
+                "src/routes/AppRoutes.js": {
+                    "relative_path": "src/routes/AppRoutes.js",
+                    "file_type": "js",
+                    "source_files": ["app.config.js"]
+                }
+            }
+            
+            # Required fields for each file
+            required_fields = [
+                "file_name",
+                "relative_path",
+                "file_type",
+                "dependencies",
+                "source_files",
+                "description",
+                "migration_suggestions",
+                "routing_info"
+            ]
+            
+            # Ensure all required files exist
+            for file_path, defaults in required_files.items():
+                if file_path not in structure:
+                    logger.warning(f"Adding missing required file: {file_path}")
+                    structure[file_path] = {
+                        "file_name": os.path.basename(file_path),
+                        "relative_path": defaults["relative_path"],
+                        "file_type": defaults["file_type"],
+                        "dependencies": [],
+                        "source_files": defaults.get("source_files", []),
+                        "description": f"Required {defaults['file_type']} file for React project",
+                        "migration_suggestions": "Create this file following React best practices",
+                        "routing_info": "Update routing configuration as needed"
                     }
                     
-            # Validate each directory
-            for dir_name, dir_data in project_structure.items():
-                if not isinstance(dir_data, dict):
-                    raise ValueError(f"Directory {dir_name} data must be a dictionary")
+            # Validate and fix each file entry
+            for file_path, file_data in structure.items():
+                if not isinstance(file_data, dict):
+                    raise ValueError(f"File data for {file_path} must be a dictionary")
                     
-                if "description" not in dir_data:
-                    dir_data["description"] = f"{dir_name} directory"
+                # Ensure all required fields exist
+                for field in required_fields:
+                    if field not in file_data:
+                        if field in ["dependencies", "source_files"]:
+                            file_data[field] = []
+                        else:
+                            file_data[field] = f"Default {field} for {file_path}"
+                            
+                # Ensure dependencies and source_files are lists
+                if not isinstance(file_data["dependencies"], list):
+                    file_data["dependencies"] = []
+                if not isinstance(file_data.get("source_files"), list):
+                    file_data["source_files"] = []
                     
-                if "files" not in dir_data and "subdirectories" not in dir_data:
-                    dir_data["files"] = {}
+                # Normalize file name and path
+                if "/" in file_path:
+                    file_data["file_name"] = file_path.split("/")[-1]
+                else:
+                    file_data["file_name"] = file_path
                     
-            # Add metadata
-            structure["__metadata__"] = {
-                "project_id": self.project_id,
-                "generated_at": self._get_timestamp(),
-                "version": "1.0",
-                "total_files": self._count_files(project_structure)
-            }
+                if "relative_path" not in file_data:
+                    file_data["relative_path"] = file_path
+                    
+                # Ensure file type is without dot
+                file_data["file_type"] = file_data["file_type"].lstrip(".")
             
             logger.info("Successfully validated structure")
             return structure

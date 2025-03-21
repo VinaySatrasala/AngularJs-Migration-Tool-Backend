@@ -99,96 +99,136 @@ class ReactComponentGenerator:
     
     async def generate_all_components(self):
         """Generate all React components based on the migration structure."""
-        if not self.migration_data:
+        try:
             await self.load_data()
-        
-        total_files = len(self.migration_data)
-        completed_files = 0
-        failed_files = 0
-        
-        logger.info(f"Starting generation of {total_files} React components")
-        
-        # Create the base output directory
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Process each file in the migration structure
-        tasks = []
-        semaphore = asyncio.Semaphore(3)  # Limit concurrent API calls
-        
-        for file_path, file_data in self.migration_data.items():
-            tasks.append(self._generate_with_semaphore(semaphore, file_path, file_data))
-        
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        # Count successful and failed generations
-        for result in results:
-            if isinstance(result, Exception):
-                failed_files += 1
-            else:
-                completed_files += 1
-        
-        logger.info(f"Generated {completed_files}/{total_files} files successfully")
-        if failed_files > 0:
-            logger.warning(f"Failed to generate {failed_files} files")
-        
-        return completed_files, failed_files
-    
-    async def _generate_with_semaphore(self, semaphore, file_path, file_data):
-        """Generate a component with a semaphore to limit concurrent requests."""
-        async with semaphore:
-            return await self.generate_component(file_path, file_data)
-    
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
-    async def generate_component(self, file_path: str, file_data: Dict[str, Any]):
+            
+            # Create output directory if it doesn't exist
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generate each component
+            for file_path, file_info in self.migration_data.items():
+                try:
+                    logger.info(f"Generating: {file_path}")
+                    
+                    # Get dependencies content first
+                    dependencies = file_info.get("dependencies", [])
+                    dependency_contents = await self._get_dependency_contents(dependencies)
+                    
+                    # Build the prompt
+                    prompt = self._build_component_prompt(file_path, file_info, dependency_contents)
+                    
+                    # Generate the component code
+                    response = await self.llm_config._langchain_llm.apredict(prompt)
+                    
+                    # Extract code from response
+                    component_code = self._extract_code(response, file_info["file_type"])
+                    
+                    # Create the output path
+                    output_path = self.output_dir / file_info["relative_path"]
+                    output_path.parent.mkdir(parents=True, exist_ok=True)
+                    
+                    # Write the component to file
+                    with open(output_path, "w", encoding="utf-8") as f:
+                        f.write(component_code)
+                        
+                    logger.info(f"Successfully generated: {file_path}")
+                    
+                except Exception as e:
+                    logger.error(f"Error generating {file_path}: {str(e)}")
+                    continue
+                    
+        except Exception as e:
+            logger.error(f"Error generating components: {str(e)}")
+            raise
+            
+    def _build_component_prompt(self, file_path: str, file_info: Dict[str, Any], dependency_contents: Dict[str, str]) -> str:
         """
-        Generate a single React component and save it to the appropriate location.
+        Build a prompt for generating a React component.
         
         Args:
-            file_path: The path where the component should be saved
-            file_data: Data about the component to be generated
+            file_path: Path of the component to generate
+            file_info: Dictionary containing file information
+            dependency_contents: Contents of dependencies
+            
+        Returns:
+            Prompt string for the LLM
         """
         try:
-            # Create the directory if it doesn't exist
-            target_path = self.output_dir / file_path
-            target_dir = target_path.parent
-            target_dir.mkdir(parents=True, exist_ok=True)
+            # Get the source files content
+            source_files_content = []
+            for source_file in file_info.get("source_files", []):
+                if source_file in self.source_files:
+                    source_files_content.append({
+                        "name": source_file,
+                        "content": self.source_files[source_file],
+                        "type": "js" if source_file.endswith(".js") else "html" if source_file.endswith(".html") else "unknown"
+                    })
             
-            # Skip if the file already exists (to support resuming)
-            if target_path.exists():
-                logger.info(f"File already exists, skipping: {file_path}")
-                return True
+            # Build the prompt based on file type
+            file_type = file_info.get("file_type", "js")
             
-            # Get the dependencies
-            dependencies = file_data.get("dependencies", [])
-            dependency_contents = await self._get_dependency_contents(dependencies)
-            
-            # Generate different prompts based on file type
-            file_type = file_data.get("file_type", "js")
-            
-            if file_type in ["js", "jsx"]:
-                prompt = self._build_component_prompt(file_path, file_data, dependency_contents)
+            if file_type == "json":
+                base_prompt = """Generate a {file_type} file that:
+1. Follows standard {file_type} format
+2. Includes all necessary dependencies
+3. Matches the migration requirements
+4. Is properly formatted and valid
+
+Original source files are provided for reference.
+"""
             elif file_type == "css":
-                prompt = self._build_css_prompt(file_path, file_data, dependency_contents)
-            elif file_type == "json":
-                prompt = self._build_json_prompt(file_path, file_data, dependency_contents)
+                base_prompt = """Generate a {file_type} file that:
+1. Implements all necessary styles
+2. Uses modern CSS practices
+3. Maintains equivalent styling to AngularJS
+4. Is clean and well-organized
+
+Original source files are provided for reference.
+"""
             else:
-                prompt = self._build_generic_prompt(file_path, file_data, dependency_contents)
+                base_prompt = """Generate a React component that:
+1. Includes all necessary imports
+2. Uses modern React practices (functional components, hooks)
+3. Implements equivalent functionality to the AngularJS code
+4. Follows the migration suggestions
+5. Handles routing appropriately
+6. Uses the specified dependencies
+
+Original source files are provided for reference.
+"""
             
-            # Get the generated code from the AI
-            component_code = await self._query_llm(prompt)
+            # Build the main prompt
+            prompt = f"""Generate a React {file_info['file_type']} component for {file_info['relative_path']}.
+
+Component Information:
+- Description: {file_info['description']}
+- Dependencies: {', '.join(file_info['dependencies'])}
+- Migration Notes: {file_info['migration_suggestions']}
+- Routing Info: {file_info['routing_info']}
+
+Original AngularJS Source Files:
+"""
+
+            # Add source files
+            for source in source_files_content:
+                prompt += f"\n{source['name']} ({source['type']}):\n```\n{source['content']}\n```\n"
             
-            # Extract the code from the AI response
-            clean_code = self._extract_code(component_code, file_type)
+            # Add dependency contents if any
+            if dependency_contents:
+                prompt += "\nDependency Files:\n"
+                for dep_path, dep_content in dependency_contents.items():
+                    prompt += f"\n{dep_path}:\n```\n{dep_content}\n```\n"
             
-            # Save the file
-            with open(target_path, 'w', encoding='utf-8') as f:
-                f.write(clean_code)
-                
-            logger.info(f"Successfully generated: {file_path}")
-            return True
+            # Add the base prompt
+            prompt += "\n" + base_prompt.format(file_type=file_info['file_type'])
+            
+            # Add final instruction
+            prompt += "\nReturn ONLY the code wrapped in a code block."
+            
+            return prompt
             
         except Exception as e:
-            logger.error(f"Error generating {file_path}: {str(e)}")
+            logger.error(f"Error building prompt: {str(e)}")
             raise
     
     async def _get_dependency_contents(self, dependencies: List[str]) -> Dict[str, str]:
@@ -254,68 +294,127 @@ class ReactComponentGenerator:
         
         return dependency_contents
     
-    def _build_component_prompt(self, file_path: str, file_data: Dict[str, Any], dependency_contents: Dict[str, str]) -> str:
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    async def generate_component(self, file_path: str, file_data: Dict[str, Any]):
         """
-        Build a detailed prompt for generating a React JS/JSX component.
+        Generate a single React component and save it to the appropriate location.
         
         Args:
-            file_path: Path of the component to generate
-            file_data: Data about the component
-            dependency_contents: Contents of the component's dependencies
+            file_path: The path where the component should be saved
+            file_data: Data about the component to be generated
+        """
+        try:
+            # Create the directory if it doesn't exist
+            target_path = self.output_dir / file_path
+            target_dir = target_path.parent
+            target_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Skip if the file already exists (to support resuming)
+            if target_path.exists():
+                logger.info(f"File already exists, skipping: {file_path}")
+                return True
+            
+            # Get the dependencies
+            dependencies = file_data.get("dependencies", [])
+            dependency_contents = await self._get_dependency_contents(dependencies)
+            
+            # Generate different prompts based on file type
+            file_type = file_data.get("file_type", "js")
+            
+            if file_type in ["js", "jsx"]:
+                prompt = self._build_component_prompt(file_path, file_data, dependency_contents)
+            elif file_type == "css":
+                prompt = self._build_css_prompt(file_path, file_data, dependency_contents)
+            elif file_type == "json":
+                prompt = self._build_json_prompt(file_path, file_data, dependency_contents)
+            else:
+                prompt = self._build_generic_prompt(file_path, file_data, dependency_contents)
+            
+            # Get the generated code from the AI
+            component_code = await self._query_llm(prompt)
+            
+            # Extract the code from the AI response
+            clean_code = self._extract_code(component_code, file_type)
+            
+            # Save the file
+            with open(target_path, 'w', encoding='utf-8') as f:
+                f.write(clean_code)
+                
+            logger.info(f"Successfully generated: {file_path}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error generating {file_path}: {str(e)}")
+            raise
+    
+    async def _query_llm(self, prompt: str) -> str:
+        """
+        Query the language model with the given prompt.
+        
+        Args:
+            prompt: The prompt to send to the language model
             
         Returns:
-            String containing the prompt for the AI
+            String containing the response from the LLM
         """
-        # Get component name from file path
-        component_name = os.path.basename(file_path).split('.')[0]
-        
-        prompt = f"""
-You are an expert in modern React development and Angular to React migration.
-
-I need you to create a React component for: {file_path}
-
-Component information:
-- Name: {component_name}
-- Purpose: {file_data.get('migration_suggestion', 'React component')}
-- Routing: {file_data.get('routing_info', 'N/A')}
-
-This React component should be based on these AngularJS source files:
-"""
-        
-        # Add dependency contents
-        for dep_path, content in dependency_contents.items():
-            # Get short name for display
-            short_name = os.path.basename(dep_path)
+        try:
+            # Use langchain LLM for code generation
+            return await self.llm_config._langchain_llm.apredict(prompt)
+        except Exception as e:
+            raise Exception(f"Error querying LLM: {str(e)}")
             
-            prompt += f"""
-### Source file: {short_name} ({dep_path})
-```
-{content}
-```
-
-"""
+    def _extract_code(self, response: str, file_type: str) -> str:
+        """
+        Extract clean code from the AI response.
         
-        # Add React-specific instructions
-        prompt += """
-## Requirements
-Create a modern React component following these guidelines:
-- Use functional components with hooks (NOT class components)
-- Use ES6+ syntax
-- Include proper prop types (using PropTypes)
-- Implement proper state management with useState/useContext/useReducer as needed
-- Handle any necessary side effects with useEffect
-- Use async/await for asynchronous operations
-- For forms, use controlled components
-- Implement proper error handling
-- If this component needs routing, use React Router v6 syntax
-- Make sure all AngularJS functionality is properly converted to React equivalents
-
-## Output Format
-Return ONLY the complete React component code, properly formatted and ready to use.
-Do not include markdown code blocks or explanations.
-"""
+        Args:
+            response: The raw response from the AI
+            file_type: The type of file being generated
+            
+        Returns:
+            String containing the clean code
+        """
+        # First, check if the entire response is valid code (no markdown)
+        if not response.strip().startswith("```") and not response.strip().startswith("#"):
+            # If it looks like clean code already, return it
+            return response.strip()
         
-        return prompt
+        # Otherwise, look for code blocks with the specified language
+        code_block_pattern = re.compile(rf"```(?:{file_type})?\s*([\s\S]*?)\s*```")
+        matches = code_block_pattern.findall(response)
+        
+        if matches:
+            # Return the largest code block (in case there are multiple)
+            return max(matches, key=len).strip()
+        
+        # If no specific code blocks found, try generic code blocks
+        generic_code_block = re.compile(r"```\s*([\s\S]*?)\s*```")
+        generic_matches = generic_code_block.findall(response)
+        
+        if generic_matches:
+            return max(generic_matches, key=len).strip()
+        
+        # Handle specific file types
+        if file_type == "json":
+            # For JSON, find content between { and }
+            json_pattern = re.compile(r"(\{[\s\S]*\})")
+            json_matches = json_pattern.findall(response)
+            if json_matches:
+                return max(json_matches, key=len).strip()
+                
+        # For other file types or if nothing specific was found, 
+        # clean the response to remove markdown artifacts
+        
+        # Remove code block markers
+        cleaned = re.sub(r"```.*?```", "", response, flags=re.DOTALL)
+        # Remove markdown headers
+        cleaned = re.sub(r"^#.*$", "", cleaned, flags=re.MULTILINE)
+        # Remove bold/italic formatting
+        cleaned = re.sub(r"\*\*|\*|__|\^", "", cleaned)
+        # Remove horizontal rules
+        cleaned = re.sub(r"^\-\-\-+$", "", cleaned, flags=re.MULTILINE)
+        
+        return cleaned.strip()
     
     def _build_css_prompt(self, file_path: str, file_data: Dict[str, Any], dependency_contents: Dict[str, str]) -> str:
         """Build a prompt for generating CSS files."""
@@ -461,72 +560,3 @@ Do not include markdown code blocks or explanations.
 """
         
         return prompt
-    
-    async def _query_llm(self, prompt: str) -> str:
-        """
-        Query the language model with the given prompt.
-        
-        Args:
-            prompt: The prompt to send to the language model
-            
-        Returns:
-            String containing the response from the LLM
-        """
-        try:
-            # Use langchain LLM for code generation
-            return await self.llm_config._langchain_llm.apredict(prompt)
-        except Exception as e:
-            raise Exception(f"Error querying LLM: {str(e)}")
-            
-    def _extract_code(self, response: str, file_type: str) -> str:
-        """
-        Extract clean code from the AI response.
-        
-        Args:
-            response: The raw response from the AI
-            file_type: The type of file being generated
-            
-        Returns:
-            String containing the clean code
-        """
-        # First, check if the entire response is valid code (no markdown)
-        if not response.strip().startswith("```") and not response.strip().startswith("#"):
-            # If it looks like clean code already, return it
-            return response.strip()
-        
-        # Otherwise, look for code blocks with the specified language
-        code_block_pattern = re.compile(rf"```(?:{file_type})?\s*([\s\S]*?)\s*```")
-        matches = code_block_pattern.findall(response)
-        
-        if matches:
-            # Return the largest code block (in case there are multiple)
-            return max(matches, key=len).strip()
-        
-        # If no specific code blocks found, try generic code blocks
-        generic_code_block = re.compile(r"```\s*([\s\S]*?)\s*```")
-        generic_matches = generic_code_block.findall(response)
-        
-        if generic_matches:
-            return max(generic_matches, key=len).strip()
-        
-        # Handle specific file types
-        if file_type == "json":
-            # For JSON, find content between { and }
-            json_pattern = re.compile(r"(\{[\s\S]*\})")
-            json_matches = json_pattern.findall(response)
-            if json_matches:
-                return max(json_matches, key=len).strip()
-                
-        # For other file types or if nothing specific was found, 
-        # clean the response to remove markdown artifacts
-        
-        # Remove code block markers
-        cleaned = re.sub(r"```.*?```", "", response, flags=re.DOTALL)
-        # Remove markdown headers
-        cleaned = re.sub(r"^#.*$", "", cleaned, flags=re.MULTILINE)
-        # Remove bold/italic formatting
-        cleaned = re.sub(r"\*\*|\*|__|\^", "", cleaned)
-        # Remove horizontal rules
-        cleaned = re.sub(r"^\-\-\-+$", "", cleaned, flags=re.MULTILINE)
-        
-        return cleaned.strip()

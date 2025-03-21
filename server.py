@@ -28,7 +28,7 @@ app.add_middleware(
 )
 
 # Create output directory if it doesn't exist
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
+OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "uploads")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def generate_project_id():
@@ -49,9 +49,9 @@ async def save_upload_to_output(project_id: str, source_path: str, is_dir: bool 
     
     return project_dir
 
-async def trigger_analysis(project_dir: str):
+async def trigger_analysis(project_dir: str,project_id: str):
     """Trigger project analysis in the background"""
-    await AnalysisService.start_analysis(project_dir)
+    await AnalysisService.start_analysis(project_dir,project_id)
 
 @app.get("/")
 async def root():
@@ -69,7 +69,7 @@ async def migrate_from_github(request: GitHubRequest):
             project_dir = await save_upload_to_output(project_id, temp_dir, is_dir=True)
             
             # Trigger analysis in the background
-            await trigger_analysis(project_dir)
+            await trigger_analysis(project_dir,project_id)
         
         return {
             "status": "success",

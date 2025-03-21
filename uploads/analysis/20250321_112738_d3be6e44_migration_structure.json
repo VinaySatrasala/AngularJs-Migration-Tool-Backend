@@ -1,0 +1,157 @@
+{
+  "project_id": "20250321_112738_d3be6e44",
+  "components": [],
+  "pages": [
+    {
+      "name": "AboutComponent",
+      "type": "functional",
+      "sourceFiles": [
+        "app\\components\\about\\about.controller.js",
+        "app\\components\\about\\about.view.html"
+      ],
+      "dependencies": [],
+      "props": [],
+      "stateItems": [
+        "title",
+        "content"
+      ],
+      "description": "This component manages and displays the 'About Us' page content, including the company's mission, vision, values, history, team, customer focus, and contact information.",
+      "routeInfo": {
+        "isRouted": false,
+        "potentialRoute": ""
+      }
+    },
+    {
+      "name": "HomeComponent",
+      "type": "functional",
+      "sourceFiles": [
+        "app\\components\\home\\home.controller.js",
+        "app\\components\\home\\home.view.html"
+      ],
+      "dependencies": [
+        "useState"
+      ],
+      "props": [],
+      "stateItems": [
+        "title",
+        "message",
+        "highlights",
+        "callToAction"
+      ],
+      "description": "A React component that displays a home page with a dynamic title, message, highlights, and a call-to-action to explore products.",
+      "routeInfo": {
+        "isRouted": false,
+        "potentialRoute": ""
+      }
+    },
+    {
+      "name": "ProductList",
+      "type": "functional",
+      "sourceFiles": [
+        "app\\components\\products\\products.controller.js",
+        "app\\components\\products\\products.view.html"
+      ],
+      "dependencies": [
+        "useState",
+        "useEffect"
+      ],
+      "props": [],
+      "stateItems": [
+        "products",
+        "title"
+      ],
+      "description": "This component displays a list of products with details like image, name, description, category, price, and rating, along with a 'Buy Now' button for each product.",
+      "routeInfo": {
+        "isRouted": false,
+        "potentialRoute": ""
+      }
+    }
+  ],
+  "hooks": [
+    {
+      "name": "useProducts",
+      "migrationType": "hook",
+      "sourceFiles": [
+        "app\\services\\products.service.js"
+      ],
+      "dependencies": [
+        "react"
+      ],
+      "description": "Provides a list of hardcoded product objects.",
+      "stateItems": [],
+      "methods": [
+        "getProducts"
+      ]
+    },
+    {
+      "name": "useProducts",
+      "migrationType": "hook",
+      "sourceFiles": [
+        "app\\components\\products\\products.controller.js"
+      ],
+      "dependencies": [
+        "useState",
+        "useEffect"
+      ],
+      "description": "Manages the list of products and title for a view.",
+      "stateItems": [
+        "title",
+        "products"
+      ],
+      "methods": [
+        "fetchProducts"
+      ]
+    }
+  ],
+  "services": [],
+  "contexts": [],
+  "routing": {
+    "type": "react-router-dom",
+    "version": "6.x",
+    "structure": "centralized",
+    "routes": [
+      {
+        "path": "/",
+        "component": "HomeComponent",
+        "exact": true,
+        "children": []
+      },
+      {
+        "path": "/about",
+        "component": "AboutComponent",
+        "exact": true,
+        "children": []
+      },
+      {
+        "path": "/products",
+        "component": "ProductList",
+        "exact": true,
+        "children": []
+      }
+    ],
+    "configuration": {
+      "basename": "",
+      "hashType": false,
+      "features": []
+    }
+  },
+  "metadata": {
+    "generated_at": "2025-03-21 11:28:06.176811",
+    "analysis_file": "C:\\Users\\284706\\Desktop\\AngularJs-React-Migration\\uploads\\analysis\\20250321_112738_d3be6e44_analysis.json",
+    "source_files": [
+      "index.html",
+      "package-lock.json",
+      "package.json",
+      "app\\app.config.js",
+      "app\\app.module.js",
+      "app\\services\\products.service.js",
+      "app\\components\\about\\about.controller.js",
+      "app\\components\\about\\about.view.html",
+      "app\\components\\home\\home.controller.js",
+      "app\\components\\home\\home.view.html",
+      "app\\components\\products\\products.controller.js",
+      "app\\components\\products\\products.view.html",
+      "assets\\css\\styles.css"
+    ]
+  }
+}

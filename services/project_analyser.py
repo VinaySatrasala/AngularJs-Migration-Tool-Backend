@@ -3,7 +3,7 @@ import json
 import re
 import asyncio
 from pathlib import Path
-from typing import Dict, List, Set, Any, Optional
+from typing import Dict, List, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 
 # Import your LLM configuration
@@ -14,8 +14,9 @@ class AngularProjectAnalyzer:
     Analyzer for AngularJS projects that creates a structured analysis of the codebase.
     Uses LLMs to generate descriptions and understand relationships between files.
     """
-    def __init__(self, project_path: str, output_file: str = "analysis.json"):
+    def __init__(self, project_path: str, project_id: str = None, output_file: str = "analysis.json"):
         self.project_path = Path(project_path)
+        self.project_id = project_id
         self.output_file = output_file
         self.file_extensions = {'.js', '.html', '.css', '.json', '.md'}
         self.analysis_results = {}
@@ -34,7 +35,8 @@ class AngularProjectAnalyzer:
             'ng_include': re.compile(r'ng-include=[\'"]([^\'"]+)[\'"]'),
             'html_script_src': re.compile(r'<script.*?src=[\'"]([^\'"]+)[\'"]'),
             'html_link_href': re.compile(r'<link.*?href=[\'"]([^\'"]+)[\'"]'),
-            'injection': re.compile(r'\$inject\s*=\s*\[(.*?)\]|\bfunction\s*\((.*?)\)')
+            'injection': re.compile(r'\$inject\s*=\s*\[(.*?)\]|\bfunction\s*\((.*?)\)'),
+            'routing': re.compile(r'\.(?:config|when|state|otherwise)\s*\(\s*(?:function|\[|{)')
         }
 
     async def analyze_project(self) -> Dict[str, Any]:
@@ -61,10 +63,15 @@ class AngularProjectAnalyzer:
             dependencies = self._find_dependencies(info['content'], file_path, file_info_results)
             info['dependencies'] = dependencies
         
-        # 4. Use LLM to generate descriptions for each file
+        # 4. Use LLM to generate descriptions and routing analysis for each file
         for file_path, info in file_info_results.items():
-            description = await self._generate_file_description(info)
+            description, routing_info = await self._generate_file_analysis(info)
             info['description'] = description
+            info['routing_info'] = routing_info
+            
+            # Remove content as it's not needed in final output
+            if 'content' in info:
+                del info['content']
         
         # 5. Save results to JSON file
         self.analysis_results = file_info_results
@@ -95,18 +102,17 @@ class AngularProjectAnalyzer:
             file_type = file_path.suffix[1:]  # Remove the leading dot
             relative_path = str(file_path.relative_to(self.project_path))
             
-            # Extract Angular-specific information based on file type
-            angular_components = self._extract_angular_components(content, file_type)
+            # Check for routing-related code
+            has_routing = bool(self.patterns['routing'].search(content)) if file_type == 'js' else False
             
             return {
                 "file_name": file_path.name,
                 "relative_path": relative_path,
                 "file_type": file_type,
-                "size_bytes": file_path.stat().st_size,
                 "content": content,
-                "angular_components": angular_components,
                 "dependencies": [],  # Will be filled later
-                "description": ""    # Will be filled by LLM
+                "description": "",   # Will be filled by LLM
+                "routing_info": ""   # Will be filled by LLM
             }
         except Exception as e:
             print(f"Error processing file {file_path}: {str(e)}")
@@ -116,45 +122,10 @@ class AngularProjectAnalyzer:
                 "file_type": file_path.suffix[1:],
                 "error": str(e),
                 "content": "",
-                "angular_components": [],
                 "dependencies": [],
-                "description": "Error processing file"
+                "description": "Error processing file",
+                "routing_info": "Error processing file"
             }
-
-    def _extract_angular_components(self, content: str, file_type: str) -> Dict[str, List[str]]:
-        """Extract Angular-specific components from file content"""
-        components = {
-            "modules": [],
-            "controllers": [],
-            "services": [],
-            "directives": [],
-            "components": []
-        }
-        
-        if file_type != 'js':
-            return components
-            
-        # Extract modules
-        modules = self.patterns['angular_module'].findall(content)
-        components["modules"] = list(set(modules))
-        
-        # Extract controllers
-        controllers = self.patterns['angular_controller'].findall(content)
-        components["controllers"] = list(set(controllers))
-        
-        # Extract services (factory, service, provider)
-        services = self.patterns['angular_service'].findall(content)
-        components["services"] = list(set(services))
-        
-        # Extract directives
-        directives = self.patterns['angular_directive'].findall(content)
-        components["directives"] = list(set(directives))
-        
-        # Extract components (Angular 1.5+)
-        component = self.patterns['angular_component'].findall(content)
-        components["components"] = list(set(component))
-        
-        return components
 
     def _find_dependencies(self, content: str, file_path: str, all_files: Dict[str, Dict]) -> List[str]:
         """Find dependencies for a given file"""
@@ -180,11 +151,12 @@ class AngularProjectAnalyzer:
                 for other_path, other_info in all_files.items():
                     if other_path == file_path:
                         continue
-                        
-                    angular_components = other_info.get('angular_components', {})
-                    for component_type in ['services', 'directives', 'components']:
-                        if injection in angular_components.get(component_type, []):
-                            dependencies.add(other_path)
+                    
+                    # Check if the file might contain the service
+                    other_content = other_info.get('content', '')
+                    service_pattern = f"(?:service|factory|provider|component|directive)\\(['\"]({injection})['\"]"
+                    if re.search(service_pattern, other_content):
+                        dependencies.add(other_path)
         
         # HTML file dependencies
         elif file_type == 'html':
@@ -260,8 +232,8 @@ class AngularProjectAnalyzer:
         
         return list(set(injections))
 
-    async def _generate_file_description(self, file_info: Dict[str, Any]) -> str:
-        """Generate a description for a file using LLM"""
+    async def _generate_file_analysis(self, file_info: Dict[str, Any]) -> tuple:
+        """Generate a description and routing analysis for a file using LLM"""
         try:
             file_type = file_info['file_type']
             content = file_info['content']
@@ -275,9 +247,10 @@ class AngularProjectAnalyzer:
             if file_type == 'js':
                 prompt = f"""
                 Analyze this AngularJS JavaScript file '{file_name}'. 
-                Provide a concise description (max 2 sentences) explaining what this file does.
-                Include the main purpose, any Angular components defined (modules, controllers, services, etc.), 
-                and its role in the application architecture.
+                Provide:
+                1. A concise description (max 2 sentences) explaining what this file does.
+                2. Routing analysis: Explain if this file is involved in app routing, and if so, how. 
+                   Look for routing configuration, states, URL patterns, or params. If no routing is involved, state that.
 
                 File content:
                 ```javascript
@@ -285,12 +258,16 @@ class AngularProjectAnalyzer:
                 ```
                 
                 Description:
+                
+                Routing Analysis:
                 """
             elif file_type == 'html':
                 prompt = f"""
                 Analyze this AngularJS HTML template file '{file_name}'.
-                Provide a concise description (max 2 sentences) explaining what this view template contains.
-                Include main UI elements, directives used, and which part of the application it likely represents.
+                Provide:
+                1. A concise description (max 2 sentences) explaining what this view template contains.
+                2. Routing analysis: Explain if this template is related to routing, such as containing ui-view, ng-view, 
+                   or references route parameters. If no routing is involved, state that.
 
                 File content:
                 ```html
@@ -298,12 +275,16 @@ class AngularProjectAnalyzer:
                 ```
                 
                 Description:
+                
+                Routing Analysis:
                 """
             else:
                 prompt = f"""
                 Analyze this {file_type} file '{file_name}' from an AngularJS project.
-                Provide a concise description (max 2 sentences) explaining what this file does.
-                Include its purpose and role in the application.
+                Provide:
+                1. A concise description (max 2 sentences) explaining what this file does.
+                2. Routing analysis: Explain if this file might be related to routing in any way. 
+                   If no routing is involved, state that.
 
                 File content:
                 ```
@@ -311,6 +292,8 @@ class AngularProjectAnalyzer:
                 ```
                 
                 Description:
+                
+                Routing Analysis:
                 """
             
             # Call the LLM
@@ -319,49 +302,35 @@ class AngularProjectAnalyzer:
                 prompt
             )
             
-            # Clean up the response
-            description = response.strip()
+            # Parse the response to extract description and routing info
+            parts = response.split("Routing Analysis:")
             
-            # Limit to max 2 sentences if needed
+            description = parts[0].replace("Description:", "").strip()
+            routing_info = parts[1].strip() if len(parts) > 1 else "No routing information available."
+            
+            # Limit description to max 2 sentences if needed
             sentences = re.split(r'(?<=[.!?])\s+', description)
             if len(sentences) > 2:
                 description = ' '.join(sentences[:2])
                 
-            return description
+            return description, routing_info
             
         except Exception as e:
-            print(f"Error generating description for {file_info['relative_path']}: {str(e)}")
-            return "Unable to generate description due to an error."
+            print(f"Error generating analysis for {file_info['relative_path']}: {str(e)}")
+            return "Unable to generate description due to an error.", "Unable to analyze routing due to an error."
 
     def _save_analysis(self) -> None:
         """Save analysis results to JSON file"""
-        # Create analysis directory if it doesn't exist
-        analysis_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'analysis')
-        os.makedirs(analysis_dir, exist_ok=True)
+        # If project_id is provided, use it to create the analysis file name
+        if self.project_id:
+            # Get the output directory (parent of project directory)
+            output_dir = os.path.dirname(str(self.project_path))
+            analysis_file = os.path.join(output_dir, f"{self.project_id}_analysis.json")
+        else:
+            analysis_file = self.output_file
         
-        # Generate a unique project ID based on the project path
-        project_id = os.path.basename(self.project_path)
-        if not project_id:  # If project_path ends with a separator
-            project_id = os.path.basename(os.path.dirname(self.project_path))
-            
-        # Create the analysis file path
-        analysis_file = os.path.join(analysis_dir, f"{project_id}_analysis.json")
-        
-        # Remove actual file content from output to reduce size
-        output_results = {}
-        
-        for file_path, info in self.analysis_results.items():
-            output_info = info.copy()
-            
-            # Store a truncated version of content or remove entirely
-            content_preview = info['content'][:200] + "..." if len(info['content']) > 200 else info['content']
-            output_info['content_preview'] = content_preview
-            output_info.pop('content', None)
-            
-            output_results[file_path] = output_info
-            
-        with open(analysis_file, 'w') as f:
-            json.dump(output_results, f, indent=2)
+        with open(self.output_file, 'w') as f:
+            json.dump(self.analysis_results, f, indent=2)
             
         # Update the output file path
         self.output_file = analysis_file
@@ -370,35 +339,29 @@ async def main():
     # Get project path from command line or use default
     import sys
     project_path = sys.argv[1] if len(sys.argv) > 1 else "."
-    output_file = sys.argv[2] if len(sys.argv) > 2 else "analysis.json"
+    project_id = sys.argv[2] if len(sys.argv) > 2 else None
+    output_file = sys.argv[3] if len(sys.argv) > 3 else "analysis.json"
     
-    analyzer = AngularProjectAnalyzer(project_path, output_file)
+    analyzer = AngularProjectAnalyzer(project_path, project_id, output_file)
     results = await analyzer.analyze_project()
     
     # Print summary
     total_files = len(results)
     file_types = {}
-    component_counts = {
-        "modules": 0,
-        "controllers": 0,
-        "services": 0,
-        "directives": 0,
-        "components": 0
-    }
+    routing_files = 0
     
     for file_info in results.values():
         file_type = file_info['file_type']
         file_types[file_type] = file_types.get(file_type, 0) + 1
         
-        for component_type, components in file_info.get('angular_components', {}).items():
-            component_counts[component_type] += len(components)
+        # Count files involved in routing
+        if "not involved" not in file_info.get('routing_info', '').lower() and "no routing" not in file_info.get('routing_info', '').lower():
+            routing_files += 1
     
     print(f"\nProject Analysis Summary:")
     print(f"Total files analyzed: {total_files}")
     print(f"File types distribution: {file_types}")
-    print(f"Angular components found:")
-    for component_type, count in component_counts.items():
-        print(f"  - {component_type}: {count}")
+    print(f"Files involved in routing: {routing_files}")
     print(f"\nFull analysis saved to: {output_file}")
 
 if __name__ == "__main__":

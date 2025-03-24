@@ -4,6 +4,7 @@ from pathlib import Path
 import asyncio
 from typing import Dict, List, Any, Optional, Union
 import logging
+from langchain.memory import ConversationBufferMemory
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,10 @@ class ReactMigrationStructureGenerator:
             project_id: Unique identifier for the project
         """
         self.analysis_file = analysis_file
-        self.llm_config = llm_config
         self.project_id = project_id
         self.analysis_data = None
-        
+
+        self.llm_config = llm_config
     async def load_analysis_data(self) -> Dict[str, Any]:
         """
         Load the AngularJS project analysis from the JSON file.

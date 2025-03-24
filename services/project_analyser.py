@@ -9,10 +9,19 @@ from concurrent.futures import ThreadPoolExecutor
 # Import your LLM configuration
 from config.llm_config import llm_config
 
+# Import file-specific prompts
+from utils.analysis_prompts import (
+    get_js_prompt,
+    get_html_prompt,
+    get_css_prompt,
+    get_json_prompt,
+    get_default_prompt
+)
+
 class AngularProjectAnalyzer:
     """
     Analyzer for AngularJS projects that creates a structured analysis of the codebase.
-    Uses LLMs to generate descriptions and understand relationships between files.
+    Uses LLMs to generate comprehensive analysis for migration planning.
     """
     def __init__(self, project_path: str, project_id: str = None, output_file: str = "analysis.json"):
         self.project_path = Path(project_path)
@@ -21,9 +30,6 @@ class AngularProjectAnalyzer:
         self.file_extensions = {'.js', '.html', '.css', '.json', '.md'}
         self.analysis_results = {}
         self.llm = llm_config._langchain_llm
-        self.embedding_model = llm_config._langchain_embedding
-        
-        # Regex patterns for identifying dependencies
         self.patterns = {
             'angular_module': re.compile(r'angular\.module\([\'"]([^\'"]+)[\'"]'),
             'angular_controller': re.compile(r'\.controller\([\'"]([^\'"]+)[\'"]'),
@@ -38,7 +44,7 @@ class AngularProjectAnalyzer:
             'injection': re.compile(r'\$inject\s*=\s*\[(.*?)\]|\bfunction\s*\((.*?)\)'),
             'routing': re.compile(r'\.(?:config|when|state|otherwise)\s*\(\s*(?:function|\[|{)')
         }
-
+        
     async def analyze_project(self) -> Dict[str, Any]:
         """Main method to analyze the entire AngularJS project"""
         print(f"Starting analysis of project at: {self.project_path}")
@@ -63,11 +69,10 @@ class AngularProjectAnalyzer:
             dependencies = self._find_dependencies(info['content'], file_path, file_info_results)
             info['dependencies'] = dependencies
         
-        # 4. Use LLM to generate descriptions and routing analysis for each file
+        # 4. Use LLM to analyze each file using dedicated prompts
         for file_path, info in file_info_results.items():
-            description, routing_info = await self._generate_file_analysis(info)
-            info['description'] = description
-            info['routing_info'] = routing_info
+            migration_analysis = await self._analyze_with_ai(info)
+            info.update(migration_analysis)
             
             # Remove content as it's not needed in final output
             if 'content' in info:
@@ -102,18 +107,14 @@ class AngularProjectAnalyzer:
             file_type = file_path.suffix[1:]  # Remove the leading dot
             relative_path = str(file_path.relative_to(self.project_path))
             
-            # Check for routing-related code
-            has_routing = bool(self.patterns['routing'].search(content)) if file_type == 'js' else False
-            
             return {
                 "file_name": file_path.name,
                 "relative_path": relative_path,
                 "file_type": file_type,
                 "content": content,
-                "dependencies": [],  # Will be filled later
-                "description": "",   # Will be filled by LLM
-                "routing_info": ""   # Will be filled by LLM
+                "dependencies": []  # Will be filled later
             }
+            
         except Exception as e:
             print(f"Error processing file {file_path}: {str(e)}")
             return {
@@ -122,12 +123,11 @@ class AngularProjectAnalyzer:
                 "file_type": file_path.suffix[1:],
                 "error": str(e),
                 "content": "",
-                "dependencies": [],
-                "description": "Error processing file",
-                "routing_info": "Error processing file"
+                "dependencies": []
             }
 
-    def _find_dependencies(self, content: str, file_path: str, all_files: Dict[str, Dict]) -> List[str]:
+
+    def  _find_dependencies(self, content: str, file_path: str, all_files: Dict[str, Dict]) -> List[str]:
         """Find dependencies for a given file"""
         dependencies = set()
         file_type = file_path.split('.')[-1]
@@ -172,6 +172,9 @@ class AngularProjectAnalyzer:
         
         return list(dependencies)
 
+
+
+    
     def _resolve_path(self, import_path: str, current_file: str, all_files: Dict[str, Dict]) -> Optional[str]:
         """Resolve a relative import path to an actual file in the project"""
         # Handle common JS extensions that might be omitted
@@ -206,95 +209,29 @@ class AngularProjectAnalyzer:
                 
         return None
 
-    def _extract_injections(self, content: str) -> List[str]:
-        """Extract Angular dependency injection names from JS content"""
-        injections = []
-        
-        # Look for explicit $inject arrays
-        inject_matches = self.patterns['injection'].findall(content)
-        
-        for match_group in inject_matches:
-            for match in match_group:
-                if not match:
-                    continue
-                    
-                # Clean up the match
-                params = re.findall(r'[\'"]([^\'"]+)[\'"]', match)
-                if not params:
-                    # Try to extract function parameters
-                    params = [p.strip() for p in match.split(',')]
-                    
-                for param in params:
-                    # Skip built-in services that start with $ and standard service names
-                    if (param and not param.startswith('$') and 
-                        param not in ['scope', 'rootScope', 'window', 'document']):
-                        injections.append(param)
-        
-        return list(set(injections))
+   
 
-    async def _generate_file_analysis(self, file_info: Dict[str, Any]) -> tuple:
-        """Generate a description and routing analysis for a file using LLM"""
+    async def _analyze_with_ai(self, file_info: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Send the file to AI for analysis with file-type specific prompts
+        and get structured migration insights
+        """
         try:
             file_type = file_info['file_type']
             content = file_info['content']
             file_name = file_info['file_name']
             
-            # Truncate content if too long
-            if len(content) > 8000:
-                content = content[:4000] + "\n...(content truncated)...\n" + content[-4000:]
-            
-            # Create prompt based on file type
+            # Select the appropriate prompt based on file type
             if file_type == 'js':
-                prompt = f"""
-                Analyze this AngularJS JavaScript file '{file_name}'. 
-                Provide:
-                1. A concise description (max 2 sentences) explaining what this file does.
-                2. Routing analysis: Explain if this file is involved in app routing, and if so, how. 
-                   Look for routing configuration, states, URL patterns, or params. If no routing is involved, state that.
-
-                File content:
-                ```javascript
-                {content}
-                ```
-                
-                Description:
-                
-                Routing Analysis:
-                """
+                prompt = get_js_prompt(file_name, content)
             elif file_type == 'html':
-                prompt = f"""
-                Analyze this AngularJS HTML template file '{file_name}'.
-                Provide:
-                1. A concise description (max 2 sentences) explaining what this view template contains.
-                2. Routing analysis: Explain if this template is related to routing, such as containing ui-view, ng-view, 
-                   or references route parameters. If no routing is involved, state that.
-
-                File content:
-                ```html
-                {content}
-                ```
-                
-                Description:
-                
-                Routing Analysis:
-                """
+                prompt = get_html_prompt(file_name, content)
+            elif file_type == 'css':
+                prompt = get_css_prompt(file_name, content)
+            elif file_type == 'json':
+                prompt = get_json_prompt(file_name, content)
             else:
-                prompt = f"""
-                Analyze this {file_type} file '{file_name}' from an AngularJS project.
-                Provide:
-                1. A concise description (max 2 sentences) explaining what this file does.
-                2. Routing analysis: Explain if this file might be related to routing in any way. 
-                   If no routing is involved, state that.
-
-                File content:
-                ```
-                {content}
-                ```
-                
-                Description:
-                
-                Routing Analysis:
-                """
+                prompt = get_default_prompt(file_name, content, file_type)
             
             # Call the LLM
             response = await asyncio.to_thread(
@@ -302,22 +239,24 @@ class AngularProjectAnalyzer:
                 prompt
             )
             
-            # Parse the response to extract description and routing info
-            parts = response.split("Routing Analysis:")
-            
-            description = parts[0].replace("Description:", "").strip()
-            routing_info = parts[1].strip() if len(parts) > 1 else "No routing information available."
-            
-            # Limit description to max 2 sentences if needed
-            sentences = re.split(r'(?<=[.!?])\s+', description)
-            if len(sentences) > 2:
-                description = ' '.join(sentences[:2])
-                
-            return description, routing_info
+            # Parse the JSON response
+            try:
+                result = json.loads(response)
+                return result
+            except json.JSONDecodeError:
+                # Fallback if response is not valid JSON
+                print(f"Error parsing JSON response for {file_info['relative_path']}. Using text response.")
+                return {
+                    "analysis": response,
+                    "error": "Failed to parse structured response"
+                }
             
         except Exception as e:
-            print(f"Error generating analysis for {file_info['relative_path']}: {str(e)}")
-            return "Unable to generate description due to an error.", "Unable to analyze routing due to an error."
+            print(f"Error analyzing file {file_info['relative_path']}: {str(e)}")
+            return {
+                "analysis_error": str(e),
+                "migration_insights": "Unable to analyze due to an error."
+            }
 
     def _save_analysis(self) -> None:
         """Save analysis results to JSON file"""
@@ -325,16 +264,34 @@ class AngularProjectAnalyzer:
         if self.project_id:
             # Get the output directory (parent of project directory)
             output_dir = os.path.dirname(str(self.project_path))
-            analysis_file = os.path.join(output_dir, f"{self.project_id}_analysis.json")
-        else:
-            analysis_file = self.output_file
+            self.output_file = os.path.join(output_dir, f"{self.project_id}_analysis.json")
         
         with open(self.output_file, 'w') as f:
             json.dump(self.analysis_results, f, indent=2)
-            
-        # Update the output file path
-        self.output_file = analysis_file
-
+        
+    def _extract_injections(self, content: str) -> List[str]:
+        """Extract Angular dependency injection names from the content"""
+        injections = set()
+        
+        # Find all injection patterns
+        matches = self.patterns['injection'].finditer(content)
+        for match in matches:
+            # Check both capture groups (array and function params)
+            injection_list = match.group(1) or match.group(2)
+            if injection_list:
+                # Split by comma and clean up each injection name
+                items = [
+                    item.strip().strip('"\'') 
+                    for item in injection_list.split(',')
+                ]
+                # Filter out Angular's built-in services
+                filtered_items = [
+                    item for item in items 
+                    if not item.startswith('$') and item
+                ]
+                injections.update(filtered_items)
+        
+        return list(injections)
 async def main():
     # Get project path from command line or use default
     import sys
@@ -348,20 +305,14 @@ async def main():
     # Print summary
     total_files = len(results)
     file_types = {}
-    routing_files = 0
     
     for file_info in results.values():
         file_type = file_info['file_type']
         file_types[file_type] = file_types.get(file_type, 0) + 1
-        
-        # Count files involved in routing
-        if "not involved" not in file_info.get('routing_info', '').lower() and "no routing" not in file_info.get('routing_info', '').lower():
-            routing_files += 1
     
     print(f"\nProject Analysis Summary:")
     print(f"Total files analyzed: {total_files}")
     print(f"File types distribution: {file_types}")
-    print(f"Files involved in routing: {routing_files}")
     print(f"\nFull analysis saved to: {output_file}")
 
 if __name__ == "__main__":

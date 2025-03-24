@@ -74,7 +74,7 @@ class AnalysisService:
                 "project_id": project_id,
                 "analysis_results": analysis_results,
                 "target_structure": target_structure,
-                "react_output_dir": output_dir,
+                "output_dir": str(output_dir),
                 "timestamp": str(analysis_instance.created_at)
             }
         except Exception as e:
@@ -83,36 +83,6 @@ class AnalysisService:
             except:
                 pass
             print(f"Error analyzing project: {str(e)}")
-            return {
-                "status": "error",
-                "project_id": project_id,
-                "message": str(e),
-                "timestamp": str(datetime.now())
-            }
+            raise e
         finally:
             db.close()
-
-    @staticmethod
-    async def start_analysis(project_path: str, project_id: str) -> Dict[str, Any]:
-        """
-        Start project analysis in the background
-        Args:
-            project_path: Path to the project to analyze
-            project_id: Unique identifier for the project
-        """
-        try:
-            # Create task for background processing
-            task = asyncio.create_task(AnalysisService.analyze_project(project_path, project_id))
-            return {
-                "status": "started",
-                "project_id": project_id,
-                "message": "Analysis started in background",
-                "timestamp": str(datetime.now())
-            }
-        except Exception as e:
-            return {
-                "status": "error",
-                "project_id": project_id,
-                "message": f"Failed to start analysis: {str(e)}",
-                "timestamp": str(datetime.now())
-            }

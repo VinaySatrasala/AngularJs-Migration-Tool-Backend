@@ -208,9 +208,35 @@ class AngularProjectAnalyzer:
                 return f"{full_path}{ext}"
                 
         return None
+    
+    @staticmethod
+    def parse_json_response(response: str):
+        """
+        Attempts to parse a JSON response, handling extra text, formatting issues, 
+        and extracting JSON if necessary.
+        
+        :param response: The raw response string from LLM or another source.
+        :return: Parsed JSON object or an error message.
+        """
+        try:
+            # Strip leading/trailing whitespace
+            response = response.strip()
 
-   
+            # Attempt direct JSON parsing
+            return json.loads(response)
 
+        except json.JSONDecodeError:
+            # If parsing fails, try extracting JSON using regex
+            match = re.search(r"\{.*\}", response, re.DOTALL)
+            if match:
+                try:
+                    return json.loads(match.group())
+                except json.JSONDecodeError:
+                    pass  # Continue to fallback handling
+
+        # Fallback: Return raw response with an error message
+        return {"error": "Failed to parse JSON", "raw_response": response}
+    
     async def _analyze_with_ai(self, file_info: Dict[str, Any]) -> Dict[str, Any]:
         """
         Send the file to AI for analysis with file-type specific prompts
@@ -240,16 +266,7 @@ class AngularProjectAnalyzer:
             )
             
             # Parse the JSON response
-            try:
-                result = json.loads(response)
-                return result
-            except json.JSONDecodeError:
-                # Fallback if response is not valid JSON
-                print(f"Error parsing JSON response for {file_info['relative_path']}. Using text response.")
-                return {
-                    "analysis": response,
-                    "error": "Failed to parse structured response"
-                }
+            return self.parse_json_response(response)
             
         except Exception as e:
             print(f"Error analyzing file {file_info['relative_path']}: {str(e)}")
@@ -257,15 +274,11 @@ class AngularProjectAnalyzer:
                 "analysis_error": str(e),
                 "migration_insights": "Unable to analyze due to an error."
             }
-
+            
+    
     def _save_analysis(self) -> None:
         """Save analysis results to JSON file"""
-        # If project_id is provided, use it to create the analysis file name
-        if self.project_id:
-            # Get the output directory (parent of project directory)
-            output_dir = os.path.dirname(str(self.project_path))
-            self.output_file = os.path.join(output_dir, f"{self.project_id}_analysis.json")
-        
+        # If project_id is provided, use it to create the analysis file name        
         with open(self.output_file, 'w') as f:
             json.dump(self.analysis_results, f, indent=2)
         

@@ -115,8 +115,7 @@ Generate a flat JSON object where each key is a target React file path. The stru
       "List of original AngularJS files required for migrating this file"
     ],
     "description": "Purpose of this file",
-    "migration_suggestions": "How to convert from AngularJS equivalent",
-    "routing_info": "Routing-related details if applicable"
+    "migration_suggestions": "How to convert from AngularJS equivalent"
   }
 }
 

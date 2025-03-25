@@ -27,6 +27,7 @@ class AngularProjectAnalyzer:
         self.project_path = Path(project_path)
         self.project_id = project_id
         self.output_file = output_file
+        self.output_file_with_content = output_file.replace('.json', '_with_content.json')
         self.file_extensions = {'.js', '.html', '.css', '.json', '.md'}
         self.analysis_results = {}
         self.llm = llm_config._langchain_llm
@@ -45,6 +46,8 @@ class AngularProjectAnalyzer:
             'routing': re.compile(r'\.(?:config|when|state|otherwise)\s*\(\s*(?:function|\[|{)')
         }
         
+
+
     async def analyze_project(self) -> Dict[str, Any]:
         """Main method to analyze the entire AngularJS project"""
         print(f"Starting analysis of project at: {self.project_path}")
@@ -69,22 +72,34 @@ class AngularProjectAnalyzer:
             dependencies = self._find_dependencies(info['content'], file_path, file_info_results)
             info['dependencies'] = dependencies
         
-        # 4. Use LLM to analyze each file using dedicated prompts
+        # 4. Use LLM to analyze each file
         for file_path, info in file_info_results.items():
             migration_analysis = await self._analyze_with_ai(info)
             info.update(migration_analysis)
-            
-            # Remove content as it's not needed in final output
-            if 'content' in info:
-                del info['content']
         
-        # 5. Save results to JSON file
+        # 5. Save both versions of results
         self.analysis_results = file_info_results
-        self._save_analysis()
         
-        print(f"Analysis complete. Results saved to {self.output_file}")
-        return self.analysis_results
-
+        # Save version with content
+        with open(self.output_file_with_content, 'w', encoding='utf-8') as f:
+            json.dump(file_info_results, f, indent=2)
+            
+        # Save version without content
+        results_without_content = {}
+        for path, info in file_info_results.items():
+            info_copy = info.copy()
+            if 'content' in info_copy:
+                del info_copy['content']
+            results_without_content[path] = info_copy
+            
+        with open(self.output_file, 'w', encoding='utf-8') as f:
+            json.dump(results_without_content, f, indent=2)
+        
+        print(f"Analysis complete. Results saved to:")
+        print(f"- Without content: {self.output_file}")
+        print(f"- With content: {self.output_file_with_content}")
+        
+        return results_without_content
     def _gather_files(self) -> List[Path]:
         """Gather all relevant files from the project directory"""
         all_files = []

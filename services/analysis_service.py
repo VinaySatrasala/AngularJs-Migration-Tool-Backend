@@ -32,6 +32,7 @@ class AnalysisService:
             analysis_dir.mkdir(parents=True, exist_ok=True)
             
             analysis_file = analysis_dir / f"{project_id}_analysis.json"
+            analysis_file_content = analysis_dir / f"{project_id}_analysis_with_content.json"
             react_structure_file = output_dir / "react_migration_structure.json"
             
             # Run the analyzer
@@ -63,11 +64,11 @@ class AnalysisService:
             # Generate React components
             react_generator = ReactComponentGenerator(
                 migration_file=str(react_structure_file),
-                analysis_file=str(analysis_file),
+                analysis_file=str(analysis_file_content),
                 output_dir=output_dir / "react_output",
                 llm_config=llm_config
             )
-            await react_generator.generate_all_components()
+            await react_generator.generate_project()
             
             return {
                 "status": "success",

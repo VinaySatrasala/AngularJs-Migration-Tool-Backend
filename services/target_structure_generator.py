@@ -4,7 +4,7 @@ from pathlib import Path
 import asyncio
 from typing import Dict, List, Any, Optional, Union
 import logging
-from langchain.memory import ConversationBufferMemory
+from utils.target_structre_prompt import target_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -93,48 +93,7 @@ class ReactMigrationStructureGenerator:
         Returns:
             String containing the prompt for the AI
         """
-        prompt = """Analyze the following AngularJS project and generate a React migration structure.
-
-Here is the AngularJS project analysis:
-```json
-{json_data}
-```
-
-Generate a flat JSON object where each key is a target React file path. The structure must follow this format:
-
-{
-  "[file_path]": {
-    "file_name": "Name of the file",
-    "relative_path": "Path from project root",
-    "file_type": "File extension (no dot)",
-    "dependencies": [
-      "List of files/packages this file depends on in React",
-      "Include both npm packages and local files"
-    ],
-    "source_files": [
-      "List of original AngularJS files required for migrating this file"
-    ],
-    "description": "Purpose of this file",
-    "migration_suggestions": "How to convert from AngularJS equivalent"
-  }
-}
-
-Dependencies should include:
-- NPM packages needed (react, react-router-dom, etc.)
-- Local files imported/used by this file
-- CSS and asset files directly imported
-- Parent components that use this file
-- Child components rendered by this file
-
-For each AngularJS file in the analysis:
-1. Create equivalent React file(s)
-2. Map controllers to functional components
-3. Convert services to hooks or context
-4. Transform templates to JSX
-5. Update routing configuration
-6. Include all necessary dependencies
-
-Return ONLY the JSON object with the complete file structure."""
+        prompt = target_prompt()
 
         # Format the prompt with the analysis data
         formatted_prompt = prompt.replace("{json_data}", json.dumps(self.analysis_data, indent=2))
@@ -210,29 +169,7 @@ Return ONLY the JSON object with the complete file structure."""
             if not isinstance(structure, dict):
                 raise ValueError("Structure must be a dictionary")
                 
-            # Required files that must exist
-            required_files = {
-                "index.html": {
-                    "relative_path": "public/index.html",
-                    "file_type": "html",
-                    "source_files": ["index.html"]
-                },
-                "package.json": {
-                    "relative_path": "package.json",
-                    "file_type": "json",
-                    "source_files": []
-                },
-                "src/App.js": {
-                    "relative_path": "src/App.js",
-                    "file_type": "js",
-                    "source_files": ["app.module.js", "app.config.js"]
-                },
-                "src/routes/AppRoutes.js": {
-                    "relative_path": "src/routes/AppRoutes.js",
-                    "file_type": "js",
-                    "source_files": ["app.config.js"]
-                }
-            }
+
             
             # Required fields for each file
             required_fields = [
@@ -242,24 +179,10 @@ Return ONLY the JSON object with the complete file structure."""
                 "dependencies",
                 "source_files",
                 "description",
-                "migration_suggestions",
-                "routing_info"
+                "migration_suggestions"
             ]
             
-            # Ensure all required files exist
-            for file_path, defaults in required_files.items():
-                if file_path not in structure:
-                    logger.warning(f"Adding missing required file: {file_path}")
-                    structure[file_path] = {
-                        "file_name": os.path.basename(file_path),
-                        "relative_path": defaults["relative_path"],
-                        "file_type": defaults["file_type"],
-                        "dependencies": [],
-                        "source_files": defaults.get("source_files", []),
-                        "description": f"Required {defaults['file_type']} file for React project",
-                        "migration_suggestions": "Create this file following React best practices",
-                        "routing_info": "Update routing configuration as needed"
-                    }
+
                     
             # Validate and fix each file entry
             for file_path, file_data in structure.items():

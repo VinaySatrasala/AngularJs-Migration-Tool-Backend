@@ -115,7 +115,12 @@ async def migrate_from_zip(file: UploadFile):
         
         try:
             # Save to output directory
-            project_dir = await save_upload_to_output(project_id, temp_path)
+            project_dir = os.path.join(OUTPUT_DIR, project_id)
+            os.makedirs(project_dir, exist_ok=True)
+
+            # Extract ZIP to project directory
+            with zipfile.ZipFile(temp_path, 'r') as zip_ref:
+                zip_ref.extractall(project_dir)
             
             # Run analysis and wait for completion
             result = await AnalysisService.analyze_project(project_dir, project_id)
@@ -144,3 +149,6 @@ async def migrate_from_zip(file: UploadFile):
         if project_dir or zip_path:
             cleanup_files(project_dir, zip_path)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+

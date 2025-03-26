@@ -93,15 +93,29 @@ Provide extremely detailed migration suggestions for each file, including:
 - Performance optimization opportunities
 
 ## **Don'ts**  
-- Avoid specifying routing details in every component file.  
-- Use a single file for each component (e.g., `Component.js`), rather than separating it into `index.js` and `Component.js`.  
-- Keep component-specific CSS files in the same directory as their corresponding `Component.js` file.  
-- Maintain the original data structure—if AngularJS had hardcoded data, do not convert it to dynamic fetching; keep it hardcoded in React as well.  
-- Handle all routing logic within `App.js` instead of creating a separate routing file.
+- Do not include routing details in individual component files. Keep all routing logic centralized in `App.js`.  
+- Each component should have a single file (e.g., `Component.js`) rather than splitting it into `index.js` and `Component.js`.  
+- Store a component's CSS file in the same directory as its `Component.js` file, but only if the original AngularJS project included a corresponding CSS file.  
+- Preserve the original data structure—if the AngularJS project used hardcoded data, do not convert it to dynamic fetching; keep it hardcoded in React as well.  
+- Ensure that source file paths in the migration output match the structure from the provided analysis data if / used then use / or if \\ used use the same.  
+- Avoid generating unnecessary CSS files. If an AngularJS component did not have a corresponding CSS file, do not create one in React.
 
 ## Example react strutre 
 ```json
 {
+  "public": {
+    "index.html": {
+      "file_name": "index.html",
+      "relative_path": "public/index.html",
+      "file_type": "html",
+      "dependencies": [],
+      "source_files": [
+        "index.html"
+      ],
+      "description": "Root HTML file where React mounts the app.",
+      "migration_suggestions": "Ensure this file includes a <div id='root'></div> for React to render the application. Remove AngularJS-specific script tags."
+    }
+  }
   "package.json": {
     "file_name": "package.json",
     "relative_path": "package.json",

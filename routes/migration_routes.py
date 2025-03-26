@@ -10,12 +10,18 @@ import zipfile
 from models.github_request import GitHubRequest
 from services.analysis_service import AnalysisService
 import asyncio
+import psutil 
+
 
 router = APIRouter(prefix="/api/v1/migration", tags=["migration"])
 
 # Create output directory if it doesn't exist
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 def generate_project_id():
     """Generate a unique project ID with timestamp"""
@@ -25,7 +31,7 @@ def generate_project_id():
 
 async def save_upload_to_output(project_id: str, source_path: str, is_dir: bool = False):
     """Save uploaded content to output directory"""
-    project_dir = os.path.join(OUTPUT_DIR, project_id)
+    project_dir = os.path.join(UPLOAD_DIR, project_id)
     os.makedirs(project_dir, exist_ok=True)
     
     if is_dir:
@@ -35,30 +41,49 @@ async def save_upload_to_output(project_id: str, source_path: str, is_dir: bool 
     
     return project_dir
 
-def create_zip_file(output_dir: str, project_id: str) -> str:
+def create_zip_file(UPLOAD_DIR: str, project_id: str) -> str:
     """Create a ZIP file of the migrated project"""
-    zip_path = os.path.join(OUTPUT_DIR, f"{project_id}_migrated.zip")
+    zip_path = os.path.join(UPLOAD_DIR, f"{project_id}_migrated.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         # Get the react_output directory path
-        react_output_dir = os.path.join(output_dir, "react_output")
+        react_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "react_output")
         
         # Walk through the react_output directory and add files to zip
-        for root, _, files in os.walk(react_output_dir):
+        for root, _, files in os.walk(react_UPLOAD_DIR):
             for file in files:
                 file_path = os.path.join(root, file)
-                arcname = os.path.relpath(file_path, react_output_dir)
+                arcname = os.path.relpath(file_path, react_UPLOAD_DIR)
                 zipf.write(file_path, arcname)
     return zip_path
 
 def cleanup_files(project_dir: str, zip_path: str):
-    """Clean up project directory and zip file"""
+    """Clean up project directory, output directory, and zip file"""
     try:
+        # Terminate any Git processes before cleanup
+        for process in psutil.process_iter(['pid', 'name']):
+            if 'git' in process.info['name'].lower():
+                try:
+                    process.terminate()
+                except psutil.NoSuchProcess:
+                    pass  # Process already closed
+
+        # Remove project directory
         if os.path.exists(project_dir):
-            shutil.rmtree(project_dir)
+            shutil.rmtree(project_dir, ignore_errors=True)
+
+        # Remove generated zip file
         if os.path.exists(zip_path):
             os.remove(zip_path)
+
+        # Remove output directory
+        if os.path.exists(OUTPUT_DIR):
+            shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
+            os.makedirs(OUTPUT_DIR, exist_ok=True)  # Recreate it after cleanup
+
     except Exception as e:
         print(f"Error during cleanup: {str(e)}")
+
+
 
 @router.post("/github")
 async def migrate_from_github(request: GitHubRequest):
@@ -115,7 +140,7 @@ async def migrate_from_zip(file: UploadFile):
         
         try:
             # Save to output directory
-            project_dir = os.path.join(OUTPUT_DIR, project_id)
+            project_dir = os.path.join(UPLOAD_DIR, project_id)
             os.makedirs(project_dir, exist_ok=True)
 
             # Extract ZIP to project directory
@@ -149,6 +174,3 @@ async def migrate_from_zip(file: UploadFile):
         if project_dir or zip_path:
             cleanup_files(project_dir, zip_path)
         raise HTTPException(status_code=500, detail=str(e))
-
-
-

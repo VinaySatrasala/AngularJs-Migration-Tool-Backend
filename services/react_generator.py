@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Union
 import logging
 import re
 from datetime import datetime
-
+from utils.react_generator_prompts import _build_generation_prompt
 class ReactComponentGenerator:
     """
     Generates a React application from a predefined migration structure.
@@ -127,49 +127,31 @@ class ReactComponentGenerator:
         """
         combined_content = []
 
+        print(f"Debug: Checking source files: {source_files}")
+
         for file_path in source_files:
-            # Check if file exists in analysis data
+            # Debug print to check if the file exists in analysis data
             if file_path in self.analysis_data:
+                print(f"Debug: Found {file_path} in analysis_data")
+
                 content = self.analysis_data[file_path].get('content', '')
                 if content:
+                    print(f"Debug: Adding content from {file_path}")
                     combined_content.append(content)
+                else:
+                    print(f"Debug: {file_path} exists but has no content.")
+            else:
+                print(f"Debug: {file_path} NOT found in analysis_data")
 
-        return "\n\n".join(combined_content) if combined_content else ""
+        result = "\n\n".join(combined_content) if combined_content else ""
+        
+        # Debug print final result length
+        print(f"Debug: Final combined content length: {len(result)}")
+
+        return result
+
 
     
-    def _build_generation_prompt(self, file_info: Dict[str, Any]) -> str:
-        """
-        Build a generation prompt for a specific file.
-        
-        Args:
-            file_info: Information about the file to generate
-        
-        Returns:
-            Prompt string for code generation
-        """
-        # Find source content
-        source_content = self._find_source_file(file_info.get('source_files', []))
-        
-        # Base prompt template
-        base_prompt = f"""Generate a React {file_info['file_type']} for {file_info['relative_path']}
-
-File Details:
-- Description: {file_info.get('description', '')}
-- Dependencies: {', '.join(file_info.get('dependencies', []))}
-- Migration Suggestions: {file_info.get('migration_suggestions', '')}
-
-{f"Source Content:\n```\n{source_content}\n```" if source_content else ""}
-
-Generation Requirements:
-1. Follow modern React best practices
-2. Use functional components
-3. Implement all specified dependencies
-4. Maintain original functionality
-5. Use appropriate React patterns
-
-Return ONLY the code for the file."""
-        
-        return base_prompt
     
     def _extract_code(self, response: str, file_type: str) -> str:
         """
@@ -223,7 +205,8 @@ Return ONLY the code for the file."""
                     output_path.parent.mkdir(parents=True, exist_ok=True)
                     
                     # Generate prompt
-                    prompt = self._build_generation_prompt(file_info)
+                    source_content = self._find_source_file(file_info.get('source_files', []))
+                    prompt = _build_generation_prompt(source_content,file_info)
                     print(prompt)
                     # Generate code
                     response = await self.llm_config._langchain_llm.apredict(prompt)

@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Optional, Union
 import logging
 from utils.target_structre_prompt import target_prompt
 
-logger = logging.getLogger(__name__)
+# logger = logging.getLogger(__name__)
 
 class ReactMigrationStructureGenerator:
     """
@@ -64,26 +64,26 @@ class ReactMigrationStructureGenerator:
         
         try:
             # Get the AI response
-            logger.info("Querying LLM for React structure generation...")
+            # logger.info("Querying LLM for React structure generation...")
             ai_response = await self._query_llm(prompt)
             
             # Process and validate the structure
-            logger.info("Validating generated structure...")
+            # logger.info("Validating generated structure...")
             validated_structure = self._validate_structure(ai_response)
             
             # Save the structure
-            logger.info("Saving React migration structure...")
+            # logger.info("Saving React migration structure...")
             output_dir = Path(self.analysis_file).parent.parent
             output_file = output_dir / "react_migration_structure.json"
             
             with open(output_file, 'w') as f:
                 json.dump(validated_structure, f, indent=2)
                 
-            logger.info(f"React structure saved to: {output_file}")
+            # logger.info(f"React structure saved to: {output_file}")
             return validated_structure
             
         except Exception as e:
-            logger.error(f"Error generating React structure: {str(e)}")
+            # logger.error(f"Error generating React structure: {str(e)}")
             raise
     
     def _build_structure_generation_prompt(self) -> str:
@@ -111,14 +111,14 @@ class ReactMigrationStructureGenerator:
         """
         try:
             # Use langchain LLM for structured output
-            logger.info("Sending prompt to LLM...")
+            # logger.info("Sending prompt to LLM...")
             
             # Add system message to the prompt
             full_prompt = "You are a React migration expert. Always respond with valid JSON only.\n\n" + prompt
             response_text = await self.llm_config._langchain_llm.apredict(full_prompt)
             response_text = response_text.strip()
             
-            logger.info("Received response from LLM")
+            # logger.info("Received response from LLM")
             
             # Try to find JSON in the response
             import re
@@ -126,33 +126,33 @@ class ReactMigrationStructureGenerator:
             
             if json_match:
                 json_str = json_match.group(1).strip()
-                logger.info("Found JSON in code block")
+                # logger.info("Found JSON in code block")
             else:
                 # If no code blocks, try to find JSON between curly braces
                 json_start = response_text.find('{')
                 json_end = response_text.rfind('}') + 1
                 if json_start >= 0 and json_end > json_start:
                     json_str = response_text[json_start:json_end].strip()
-                    logger.info("Found JSON between curly braces")
+                    # logger.info("Found JSON between curly braces")
                 else:
-                    logger.error("No JSON found in response")
-                    logger.error(f"Response text: {response_text}")
+                    # logger.error("No JSON found in response")
+                    # logger.error(f"Response text: {response_text}")
                     raise ValueError("Could not find JSON in LLM response")
             
             # Parse the JSON
             try:
                 result = json.loads(json_str)
-                logger.info("Successfully parsed JSON response")
+                # logger.info("Successfully parsed JSON response")
                 return result
             except json.JSONDecodeError as e:
-                logger.error(f"Invalid JSON: {str(e)}")
-                logger.error(f"JSON string: {json_str}")
+                # logger.error(f"Invalid JSON: {str(e)}")
+                # logger.error(f"JSON string: {json_str}")
                 raise ValueError("LLM response was not valid JSON")
                 
         except Exception as e:
-            logger.error(f"Error in LLM query: {str(e)}")
-            if 'response_text' in locals():
-                logger.error(f"Full response: {response_text}")
+            # logger.error(f"Error in LLM query: {str(e)}")
+            # if 'response_text' in locals():
+                # logger.error(f"Full response: {response_text}")
             raise Exception(f"Error querying LLM: {str(e)}")
             
     def _validate_structure(self, structure: Dict[str, Any]) -> Dict[str, Any]:
@@ -215,12 +215,12 @@ class ReactMigrationStructureGenerator:
                 # Ensure file type is without dot
                 file_data["file_type"] = file_data["file_type"].lstrip(".")
             
-            logger.info("Successfully validated structure")
+            # logger.info("Successfully validated structure")
             return structure
             
         except Exception as e:
-            logger.error(f"Error validating structure: {str(e)}")
-            logger.error(f"Structure: {json.dumps(structure, indent=2)}")
+            # logger.error(f"Error validating structure: {str(e)}")
+            # logger.error(f"Structure: {json.dumps(structure, indent=2)}")
             raise
             
     def _count_files(self, structure: Dict[str, Any]) -> int:

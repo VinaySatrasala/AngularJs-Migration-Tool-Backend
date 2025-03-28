@@ -8,7 +8,6 @@ async def root():
         "message": "Welcome to AngularJS to React Migration API",
         "endpoints": {
             "github_migration": "/api/v1/migration/github",
-            "zip_migration": "/api/v1/migration/zip",
-            "migration_status": "/api/v1/migration/status/{project_id}"
+            "zip_migration": "/api/v1/migration/zip"
         }
     }

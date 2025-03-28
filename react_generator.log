@@ -1,0 +1,157 @@
+2025-03-27 15:15:43,198 - INFO: Data loaded successfully
+2025-03-27 15:15:47,987 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:15:48,001 - INFO: Generated: output\20250327_151431_2b9d060e\react_output\public
+2025-03-27 15:15:51,428 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:15:51,435 - INFO: Generated: output\20250327_151431_2b9d060e\react_output\package.json
+2025-03-27 15:15:54,150 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:15:54,159 - INFO: Generated: output\20250327_151431_2b9d060e\react_output\src
+2025-03-27 15:28:39,719 - INFO: Data loaded successfully
+2025-03-27 15:28:45,646 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:28:45,655 - INFO: Generated: output\20250327_152731_c096c979\react_output\public
+2025-03-27 15:28:49,392 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:28:49,401 - INFO: Generated: output\20250327_152731_c096c979\react_output\package.json
+2025-03-27 15:28:54,954 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 15:28:54,962 - INFO: Generated: output\20250327_152731_c096c979\react_output\src
+2025-03-27 15:28:54,964 - INFO: Project generation completed successfully
+2025-03-27 16:16:04,088 - INFO: Data loaded successfully
+2025-03-27 16:16:08,195 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:16:08,233 - INFO: Generated: output\20250327_161429_f7385999\react_output\public
+2025-03-27 16:16:12,573 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:16:12,583 - INFO: Generated: output\20250327_161429_f7385999\react_output\package.json
+2025-03-27 16:16:15,034 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:16:15,062 - INFO: Generated: output\20250327_161429_f7385999\react_output\src
+2025-03-27 16:16:15,066 - INFO: Project generation completed successfully
+2025-03-27 16:31:25,827 - INFO: Data loaded successfully
+2025-03-27 16:31:31,487 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:31:31,490 - INFO: Generated: output\20250327_163031_6ae9a4ce\react_output\src
+2025-03-27 16:31:34,883 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:31:34,888 - INFO: Generated: output\20250327_163031_6ae9a4ce\react_output\public
+2025-03-27 16:31:41,146 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:31:41,153 - INFO: Generated: output\20250327_163031_6ae9a4ce\react_output\package.json
+2025-03-27 16:31:41,154 - INFO: Project generation completed successfully
+2025-03-27 16:39:28,287 - INFO: Data loaded successfully
+2025-03-27 16:39:32,471 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:39:32,478 - INFO: Generated: output\20250327_163830_3b802724\react_output\public
+2025-03-27 16:39:35,989 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:39:35,989 - INFO: Generated: output\20250327_163830_3b802724\react_output\package.json
+2025-03-27 16:39:38,523 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:39:38,527 - INFO: Generated: output\20250327_163830_3b802724\react_output\src
+2025-03-27 16:39:38,527 - INFO: Project generation completed successfully
+2025-03-27 16:43:15,978 - INFO: Data loaded successfully
+2025-03-27 16:43:20,405 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:43:20,418 - INFO: Generated: output\20250327_164242_3f4aa3c4\react_output\public
+2025-03-27 16:43:24,281 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:43:24,285 - INFO: Generated: output\20250327_164242_3f4aa3c4\react_output\package.json
+2025-03-27 16:43:26,295 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 16:43:26,305 - INFO: Generated: output\20250327_164242_3f4aa3c4\react_output\src
+2025-03-27 16:43:26,305 - INFO: Project generation completed successfully
+2025-03-27 16:58:02,506 - INFO: Data loaded successfully
+2025-03-27 16:58:02,529 - INFO: Project generation completed successfully
+2025-03-27 17:10:51,266 - INFO: Data loaded successfully
+2025-03-27 17:10:53,987 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:10:53,999 - INFO: Generated: output\20250327_171014_322e6703\react_output\public\index.html
+2025-03-27 17:10:59,457 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:10:59,465 - INFO: Generated: output\20250327_171014_322e6703\react_output\package.json
+2025-03-27 17:11:01,808 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:11:02,325 - INFO: Generated: output\20250327_171014_322e6703\react_output\src\index.js
+2025-03-27 17:11:04,737 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:11:05,277 - INFO: Generated: output\20250327_171014_322e6703\react_output\src\App.js
+2025-03-27 17:11:16,138 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:11:16,990 - INFO: Generated: output\20250327_171014_322e6703\react_output\src\components\Personalization\Personalization.js
+2025-03-27 17:11:21,331 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:11:21,345 - INFO: Generated: output\20250327_171014_322e6703\react_output\src\components\Personalization\Personalization.css
+2025-03-27 17:11:27,322 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-27 17:11:28,008 - INFO: Generated: output\20250327_171014_322e6703\react_output\src\services\usePersonalizationService\usePersonalizationService.js
+2025-03-27 17:11:28,008 - INFO: Project generation completed successfully
+2025-03-28 10:01:55,995 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:01,298 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:04,464 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:17,205 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:17,232 - INFO: Data loaded successfully
+2025-03-28 10:02:21,525 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:21,530 - INFO: Generated: output\20250328_100150_567881d0\react_output\public\index.html
+2025-03-28 10:02:24,432 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:24,436 - INFO: Generated: output\20250328_100150_567881d0\react_output\package.json
+2025-03-28 10:02:26,419 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:26,673 - INFO: Generated: output\20250328_100150_567881d0\react_output\src\index.js
+2025-03-28 10:02:28,888 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:29,101 - INFO: Generated: output\20250328_100150_567881d0\react_output\src\App.js
+2025-03-28 10:02:36,778 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:37,022 - INFO: Generated: output\20250328_100150_567881d0\react_output\src\components\Personalization\Personalization.js
+2025-03-28 10:02:40,773 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:02:40,983 - INFO: Generated: output\20250328_100150_567881d0\react_output\src\services\usePersonalizationService\usePersonalizationService.js
+2025-03-28 10:02:40,984 - INFO: Project generation completed successfully
+2025-03-28 10:06:35,088 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:06:38,042 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:06:40,508 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:06:51,630 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:06:51,648 - INFO: Data loaded successfully
+2025-03-28 10:06:59,233 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:06:59,237 - INFO: Generated: output\20250328_100628_8f0d338f\react_output\package.json
+2025-03-28 10:07:00,438 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:07:00,683 - INFO: Generated: output\20250328_100628_8f0d338f\react_output\src\index.js
+2025-03-28 10:07:03,723 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:07:03,964 - INFO: Generated: output\20250328_100628_8f0d338f\react_output\src\App.js
+2025-03-28 10:07:13,294 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:07:13,561 - INFO: Generated: output\20250328_100628_8f0d338f\react_output\src\components\Personalization\Personalization.js
+2025-03-28 10:07:17,891 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:07:18,142 - INFO: Generated: output\20250328_100628_8f0d338f\react_output\src\services\usePersonalizationService\usePersonalizationService.js
+2025-03-28 10:07:18,143 - INFO: Project generation completed successfully
+2025-03-28 10:09:26,752 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:31,659 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:36,782 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:40,859 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:43,617 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:46,836 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:09:48,473 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:02,716 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:02,749 - INFO: Data loaded successfully
+2025-03-28 10:10:04,906 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:04,910 - INFO: Generated: output\20250328_100917_f60bb036\react_output\public\index.html
+2025-03-28 10:10:07,671 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:07,676 - INFO: Generated: output\20250328_100917_f60bb036\react_output\package.json
+2025-03-28 10:10:08,793 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:09,039 - INFO: Generated: output\20250328_100917_f60bb036\react_output\src\index.js
+2025-03-28 10:10:11,570 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:11,777 - INFO: Generated: output\20250328_100917_f60bb036\react_output\src\App.js
+2025-03-28 10:10:27,279 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:27,563 - INFO: Generated: output\20250328_100917_f60bb036\react_output\src\components\DependentCareCalculator\DependentCareCalculator.js
+2025-03-28 10:10:32,624 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:33,000 - INFO: Generated: output\20250328_100917_f60bb036\react_output\src\components\TaxRatesTable\TaxRatesTable.js
+2025-03-28 10:10:41,278 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:10:41,511 - INFO: Generated: output\20250328_100917_f60bb036\react_output\src\services\useEmployeeData\useEmployeeData.js
+2025-03-28 10:10:41,512 - INFO: Project generation completed successfully
+2025-03-28 10:13:50,090 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:13:54,640 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:13:56,745 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:01,185 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:03,312 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:05,697 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:08,080 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:32,122 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:32,155 - INFO: Data loaded successfully
+2025-03-28 10:14:34,620 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:34,626 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\public\index.html
+2025-03-28 10:14:37,280 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:37,289 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\package.json
+2025-03-28 10:14:38,466 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:38,637 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\index.js
+2025-03-28 10:14:40,772 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:40,912 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\App.js
+2025-03-28 10:14:44,610 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:44,771 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\components\Calculators\LongTermDisabilityCalculator.js
+2025-03-28 10:14:49,224 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:49,456 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\components\Calculators\LifeInsuranceCalculator.js
+2025-03-28 10:14:53,956 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:14:54,146 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\components\Calculators\HealthCareCalculator.js
+2025-03-28 10:15:07,509 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:15:07,783 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\components\Calculators\DependentCareCalculator.js
+2025-03-28 10:15:10,762 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:15:10,912 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\services\useEmployeeData.js
+2025-03-28 10:15:20,897 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:15:21,064 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\services\useEstimatorsTaxRates.js
+2025-03-28 10:15:28,116 - INFO: HTTP Request: POST https://azure-openai-uk.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-08-01-preview "HTTP/1.1 200 OK"
+2025-03-28 10:15:28,120 - INFO: Generated: output\20250328_101339_fd8f264b\react_output\src\styles\global.css
+2025-03-28 10:15:28,120 - INFO: Project generation completed successfully
+2025-03-28 10:37:32,950 - INFO: Data loaded successfully
+2025-03-28 10:37:32,950 - ERROR: Project generation failed: asyncio.run() cannot be called from a running event loop

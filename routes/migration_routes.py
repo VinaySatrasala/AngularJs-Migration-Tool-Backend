@@ -10,7 +10,10 @@ import zipfile
 from models.github_request import GitHubRequest
 from services.analysis_service import AnalysisService
 import asyncio
-import psutil 
+import psutil
+from sqlalchemy.orm import Session
+from services.db_service import MigrationDBService 
+from config.db_config import get_db
 
 
 router = APIRouter(prefix="/api/v1/migration", tags=["migration"])
@@ -151,7 +154,7 @@ async def migrate_from_zip(file: UploadFile):
             result = await AnalysisService.analyze_project(project_dir, project_id)
             
             # Create ZIP file of the migrated project
-            zip_path = create_zip_file(result["output_dir"], project_id)
+            zip_path = create_zip_file(result["UPLOAD_DIR"], project_id)
             
             # Return the ZIP file
             response = FileResponse(
@@ -174,3 +177,19 @@ async def migrate_from_zip(file: UploadFile):
         if project_dir or zip_path:
             cleanup_files(project_dir, zip_path)
         raise HTTPException(status_code=500, detail=str(e))
+
+# @router.get("/analysis/{project_id}")
+# async def get_project_analysis(project_id: str, db: Session = next(get_db())):
+#     """Fetch project analysis data by project_id"""
+#     analysis = MigrationDBService.get_analysis(db, project_id)
+#     if not analysis:
+#         raise HTTPException(status_code=404, detail="Project analysis not found")
+#     return analysis
+
+# @router.get("/target-structure/{project_id}")
+# async def get_target_structure(project_id: str, db: Session = next(get_db())):
+#     """Fetch target structure data by project_id"""
+#     structure = MigrationDBService.get_target_structure(db, project_id)
+#     if not structure:
+#         raise HTTPException(status_code=404, detail="Target structure not found")
+#     return structure

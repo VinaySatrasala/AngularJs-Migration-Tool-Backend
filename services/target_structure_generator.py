@@ -70,7 +70,6 @@ class ReactMigrationStructureGenerator:
             # Process and validate the structure
             # logger.info("Validating generated structure...")
             validated_structure = self._validate_structure(ai_response)
-            
             # Save the structure
             # logger.info("Saving React migration structure...")
             output_dir = Path(self.analysis_file).parent.parent
@@ -168,8 +167,6 @@ class ReactMigrationStructureGenerator:
         try:
             if not isinstance(structure, dict):
                 raise ValueError("Structure must be a dictionary")
-                
-
             
             # Required fields for each file
             required_fields = [
@@ -181,48 +178,54 @@ class ReactMigrationStructureGenerator:
                 "description",
                 "migration_suggestions"
             ]
-            
 
-                    
-            # Validate and fix each file entry
-            for file_path, file_data in structure.items():
-                if not isinstance(file_data, dict):
-                    raise ValueError(f"File data for {file_path} must be a dictionary")
-                    
-                # Ensure all required fields exist
-                for field in required_fields:
-                    if field not in file_data:
-                        if field in ["dependencies", "source_files"]:
-                            file_data[field] = []
-                        else:
-                            file_data[field] = f"Default {field} for {file_path}"
-                            
-                # Ensure dependencies and source_files are lists
-                if not isinstance(file_data["dependencies"], list):
-                    file_data["dependencies"] = []
-                if not isinstance(file_data.get("source_files"), list):
-                    file_data["source_files"] = []
-                    
-                # Normalize file name and path
-                if "/" in file_path:
-                    file_data["file_name"] = file_path.split("/")[-1]
-                else:
-                    file_data["file_name"] = file_path
-                    
-                if "relative_path" not in file_data:
-                    file_data["relative_path"] = file_path
-                    
-                # Ensure file type is without dot
-                file_data["file_type"] = file_data["file_type"].lstrip(".")
-            
-            # logger.info("Successfully validated structure")
+            # Validate and fix each entry
+            for key, value in structure.items():
+                if not isinstance(value, dict):
+                    raise ValueError(f"Entry for {key} must be a dictionary")
+                
+                # **Check if it's a file (has 'file_type')**
+                is_file = "file_type" in value
+
+                if is_file:
+                    # Ensure all required fields exist for files
+                    for field in required_fields:
+                        if field not in value:
+                            if field in ["dependencies", "source_files"]:
+                                value[field] = []
+                            else:
+                                value[field] = f"Default {field} for {key}"
+
+                    # Ensure dependencies and source_files are lists
+                    if not isinstance(value["dependencies"], list):
+                        value["dependencies"] = []
+                    if not isinstance(value.get("source_files"), list):
+                        value["source_files"] = []
+
+                    # Normalize file name and path
+                    if "/" in key:
+                        value["file_name"] = key.split("/")[-1]
+                    else:
+                        value["file_name"] = key
+
+                    if "relative_path" not in value:
+                        value["relative_path"] = key
+
+                    # Ensure file type is without dot
+                    value["file_type"] = value["file_type"].lstrip(".")
+
             return structure
+
+        except Exception as e:
+            raise
+
             
         except Exception as e:
             # logger.error(f"Error validating structure: {str(e)}")
             # logger.error(f"Structure: {json.dumps(structure, indent=2)}")
             raise
             
+    
     def _count_files(self, structure: Dict[str, Any]) -> int:
         """Count total files in the structure recursively"""
         count = 0
@@ -240,3 +243,5 @@ class ReactMigrationStructureGenerator:
         """Get the current timestamp in ISO format."""
         from datetime import datetime
         return datetime.now().isoformat()
+    
+    

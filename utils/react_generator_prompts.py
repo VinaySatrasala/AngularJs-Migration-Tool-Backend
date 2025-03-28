@@ -46,6 +46,15 @@ def _build_generation_prompt(source_content: str, file_info: Dict[str, Any]) -> 
     ## **Return Instructions:**
     - Generate **only** the complete and functional React `{file_info['file_type']}` file.
     - Do **not** include explanations, extra comments, or additional notes—only return the code.
+    ## **Additional Notes:**
+    - &lt;Route&gt; uses element=&lt;YourComponent /&gt; instead of component=YourComponent.
+    - Replace $routeProvider with react-router-dom's <Routes> and <Route>.
+    - Define routes inside <Routes> using <Route path="..." element=Component />.
+    - Move navigation logic to useNavigate() instead of $location.path().
+    - Ensure all route components are function components.
+    - Include BrowserRouter or MemoryRouter at the top level."
+    - DO NOT use generic import paths like 'path/to/...'. Always use the correct relative path from the project structure.
+    - NEVER create a new file or assume a missing dependency—omit it from the imports instead.
 
     """
 

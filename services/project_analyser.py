@@ -28,7 +28,7 @@ class AngularProjectAnalyzer:
         self.project_id = project_id
         self.output_file = output_file
         self.output_file_with_content = output_file.replace('.json', '_with_content.json')
-        self.file_extensions = {'.js', '.html', '.css', '.json', '.md'}
+        self.file_extensions = {'.js', '.html', '.css', '.json', '.md','.cshtml'}
         self.analysis_results = {}
         self.llm = llm_config._langchain_llm
         self.patterns = {
@@ -174,7 +174,7 @@ class AngularProjectAnalyzer:
                         dependencies.add(other_path)
         
         # HTML file dependencies
-        elif file_type == 'html':
+        elif file_type == 'html' or file_type == 'cshtml':
             # Look for script and link tags
             scripts = self.patterns['html_script_src'].findall(content)
             links = self.patterns['html_link_href'].findall(content)
@@ -320,28 +320,3 @@ class AngularProjectAnalyzer:
                 injections.update(filtered_items)
         
         return list(injections)
-async def main():
-    # Get project path from command line or use default
-    import sys
-    project_path = sys.argv[1] if len(sys.argv) > 1 else "."
-    project_id = sys.argv[2] if len(sys.argv) > 2 else None
-    output_file = sys.argv[3] if len(sys.argv) > 3 else "analysis.json"
-    
-    analyzer = AngularProjectAnalyzer(project_path, project_id, output_file)
-    results = await analyzer.analyze_project()
-    
-    # Print summary
-    total_files = len(results)
-    file_types = {}
-    
-    for file_info in results.values():
-        file_type = file_info['file_type']
-        file_types[file_type] = file_types.get(file_type, 0) + 1
-    
-    print(f"\nProject Analysis Summary:")
-    print(f"Total files analyzed: {total_files}")
-    print(f"File types distribution: {file_types}")
-    print(f"\nFull analysis saved to: {output_file}")
-
-if __name__ == "__main__":
-    asyncio.run(main())

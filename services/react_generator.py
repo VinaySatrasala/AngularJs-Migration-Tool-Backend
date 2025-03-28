@@ -6,7 +6,7 @@ from typing import Dict, List, Any, Union
 import re
 from datetime import datetime
 import logging
-
+from utils.react_generator_prompts import _build_generation_prompt
 import concurrent
 
 class ReactComponentGenerator:
@@ -41,6 +41,7 @@ class ReactComponentGenerator:
         # Data containers
         self.migration_data = {}
         self.analysis_data = {}
+        self.flattened_migration_data = {}
     
     def _validate_migration_structure(self, data: Dict[str, Any]) -> bool:
         """
@@ -75,11 +76,34 @@ class ReactComponentGenerator:
             if not self._validate_migration_structure(self.migration_data):
                 raise ValueError("Invalid migration data structure")
             
+            self.flattened_migration_data = self.convert_to_folder_structure()
+            print("Succesfull : " + str(self.flattened_migration_data))
             self.logger.info("Data loaded successfully")
         
         except Exception as e:
             self.logger.error(f"Error loading data: {e}")
             raise
+    def convert_to_folder_structure(self):
+        data = self.migration_data
+        folder_structure = {}
+        
+        def insert_into_structure(path, structure):
+            parts = path.split("/")
+            current = structure
+            for part in parts[:-1]:  # Traverse folders
+                current = current.setdefault(part, {})
+            current[parts[-1]] = {}  # Store file as empty dict
+        
+        def process_node(node):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    if isinstance(value, dict) and "relative_path" in value:
+                        insert_into_structure(value["relative_path"], folder_structure)
+                    else:
+                        process_node(value)
+        
+        process_node(data)
+        return folder_structure
     
     def _find_source_file_content(self, source_files: List[str]) -> str:
         """
@@ -231,12 +255,11 @@ class ReactComponentGenerator:
             )
             
             # Prepare generation prompt
-            from utils.react_generator_prompts import _build_generation_prompt
-            prompt = _build_generation_prompt(source_content, file_info)
-            
+            prompt = _build_generation_prompt(source_content, file_info,self.flattened_migration_data)
+            print(prompt)
             # Generate code using LLM
             response = self.llm_config._langchain_llm.predict(prompt)
-            
+            print(response)
             # Extract and clean code
             generated_code = self._extract_code(response, file_info['file_type'])
             

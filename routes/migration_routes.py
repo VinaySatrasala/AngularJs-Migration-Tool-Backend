@@ -154,7 +154,7 @@ async def migrate_from_zip(file: UploadFile):
             result = await AnalysisService.analyze_project(project_dir, project_id)
             
             # Create ZIP file of the migrated project
-            zip_path = create_zip_file(result["UPLOAD_DIR"], project_id)
+            zip_path = create_zip_file(result["output_dir"], project_id)
             
             # Return the ZIP file
             response = FileResponse(
@@ -175,8 +175,9 @@ async def migrate_from_zip(file: UploadFile):
             
     except Exception as e:
         if project_dir or zip_path:
-            cleanup_files(project_dir, zip_path)
+            cleanup_files(project_dir or "", zip_path or "")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # @router.get("/analysis/{project_id}")
 # async def get_project_analysis(project_id: str, db: Session = next(get_db())):

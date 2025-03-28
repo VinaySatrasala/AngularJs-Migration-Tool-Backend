@@ -224,13 +224,11 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
 {
   "src": {
     "components": {
-      "Calculators": {
-          "Component.js": {
-            "file_name": "component.js",
-            "file_type": "js",
-            ... (file-specific metadata)
-          }
-      }
+        "Component.js": {
+          "file_name": "component.js",
+          "file_type": "js",
+          ... (file-specific metadata)
+        }
     }
   }
 }
@@ -281,7 +279,7 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
       "source_files": [
         "main.js"
       ],
-      "description": "React entry point, replacing AngularJS main.js.",
+      "description": "React entry point, replacing AngularJS main.js. dont add any routing here",
       "migration_suggestions": "Render `<App />` inside `ReactDOM.createRoot`. Remove AngularJS bootstrap logic."
     },
     "App.js": {
@@ -299,7 +297,7 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
       "migration_suggestions": "Replace AngularJS module structure with a functional React component. Use React Router for navigation."
     },
     "components": {
-      "ComponentA": {
+      "componentA": {
           "ComponentA.js": {
             "file_name": "ComponentA.js",
             "relative_path": "src/components/ComponentA/ComponentA.js",
@@ -315,7 +313,7 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
             "migration_suggestions": "Convert AngularJS controller logic into React state hooks. Replace templates with JSX."
         }
       },
-      "ComponentB": {
+      "componentB": {
           "ComponentB.js": {
             "file_name": "ComponentB.js",
             "relative_path": "src/components/ComponentB/ComponentB.js",
@@ -344,21 +342,19 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
       }
     },
     "services": {
-      "useFetchData": {
-          "useFetchData.js": {
-            "file_name": "useFetchData.js",
-            "relative_path": "src/services/useFetchData.js",
-            "file_type": "js",
-            "dependencies": [
-              "react"
-            ],
-            "source_files": [
-              "data.service.js"
-            ],
-            "description": "Custom hook for fetching data.",
-            "migration_suggestions": "Convert AngularJS service into a React hook using `useEffect` and `useState`."
-          }
-      }
+        "useFetchData.js": {
+          "file_name": "useFetchData.js",
+          "relative_path": "src/services/useFetchData.js",
+          "file_type": "js",
+          "dependencies": [
+            "react"
+          ],
+          "source_files": [
+            "data.service.js"
+          ],
+          "description": "Custom hook for fetching data.",
+          "migration_suggestions": "Convert AngularJS service into a React hook using `useEffect` and `useState`."
+        }
     },
     # Create only if present in the source project
     "styles": {

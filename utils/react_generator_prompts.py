@@ -1,6 +1,6 @@
 from typing import Any, Dict  
 
-def _build_generation_prompt(source_content: str, file_info: Dict[str, Any]) -> str:
+def _build_generation_prompt(source_content: str, file_info: Dict[str, Any],flattend_migration_data:Dict[str, Any]) -> str:
     """
     Build a structured prompt for generating a React file based on AngularJS source content.
 
@@ -55,6 +55,10 @@ def _build_generation_prompt(source_content: str, file_info: Dict[str, Any]) -> 
     - Include BrowserRouter or MemoryRouter at the top level."
     - DO NOT use generic import paths like 'path/to/...'. Always use the correct relative path from the project structure.
     - NEVER create a new file or assume a missing dependency—omit it from the imports instead.
+    - Refer the folder structure for imports give abosolute paths correctly for imports `{flattend_migration_data}`
+    - Use either browser router or router dont use both
+    - Dont add unnecessrt comments and place holders
+    - Dont use lazy loading import components properly
 
     """
 

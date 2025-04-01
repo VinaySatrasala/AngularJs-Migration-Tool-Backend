@@ -90,7 +90,7 @@ class AnalysisService:
             db.close()
             
     @staticmethod
-    async def getnerate_target_structure(project_path : str, project_id : str) -> Dict[str,Any]:
+    async def generate_target_structure(project_path : str, project_id : str) -> Dict[str,Any]:
         """
             Making editable target structre by the user
             

@@ -7,6 +7,8 @@ import git
 from datetime import datetime
 import uuid
 import zipfile
+
+from models.TargetRequest import TargetRequest  # ✅ Ensure correct path
 from models.github_request import GitHubRequest
 from services.analysis_service import AnalysisService
 import asyncio
@@ -16,7 +18,7 @@ from services.db_service import MigrationDBService
 from config.db_config import get_db
 
 
-router = APIRouter(prefix="/api/v1/migration", tags=["migration"])
+router = APIRouter(prefix="/api/v1/migratior", tags=["migration"])
 
 # Create output directory if it doesn't exist
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
@@ -102,7 +104,7 @@ async def migrate_from_github(request: GitHubRequest):
             project_dir = await save_upload_to_output(project_id, temp_dir, is_dir=True)
             
             # Run analysis and wait for completion
-            result = await AnalysisService.analyze_project(project_dir, project_id)
+            result = await AnalysisService.migrate_project(project_dir, project_id)
             
             # Create ZIP file of the migrated project
             zip_path = create_zip_file(result["output_dir"], project_id)
@@ -151,7 +153,7 @@ async def migrate_from_zip(file: UploadFile):
                 zip_ref.extractall(project_dir)
             
             # Run analysis and wait for completion
-            result = await AnalysisService.analyze_project(project_dir, project_id)
+            result = await AnalysisService.migrate_project(project_dir, project_id)
             
             # Create ZIP file of the migrated project
             zip_path = create_zip_file(result["output_dir"], project_id)
@@ -179,18 +181,79 @@ async def migrate_from_zip(file: UploadFile):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# @router.get("/analysis/{project_id}")
-# async def get_project_analysis(project_id: str, db: Session = next(get_db())):
-#     """Fetch project analysis data by project_id"""
-#     analysis = MigrationDBService.get_analysis(db, project_id)
-#     if not analysis:
-#         raise HTTPException(status_code=404, detail="Project analysis not found")
-#     return analysis
+@router.post("/zip/anlayze")
+async def target_zip(file: UploadFile):
+    project_dir = None
+    try:
+        project_id = generate_project_id()
+        
+        # Create temporary file to store the upload
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
+            temp_path = temp_file.name
+        
+        try:
+            # Save to output directory
+            project_dir = os.path.join(UPLOAD_DIR, project_id)
+            os.makedirs(project_dir, exist_ok=True)
 
-# @router.get("/target-structure/{project_id}")
-# async def get_target_structure(project_id: str, db: Session = next(get_db())):
-#     """Fetch target structure data by project_id"""
-#     structure = MigrationDBService.get_target_structure(db, project_id)
-#     if not structure:
-#         raise HTTPException(status_code=404, detail="Target structure not found")
-#     return structure
+            # Extract ZIP to project directory
+            with zipfile.ZipFile(temp_path, 'r') as zip_ref:
+                zip_ref.extractall(project_dir)
+            
+            # Run analysis and wait for completion
+            result = await AnalysisService.getnerate_target_structure(project_dir, project_id)
+            
+            return result
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error during analysis: {str(e)}")
+        
+
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/github/analayze")
+async def target_github(requset : GitHubRequest):
+    github_url = requset.github_url
+    project_dir = None
+    try:
+        project_id = generate_project_id()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Clone the repository
+            git.Repo.clone_from(github_url, temp_dir)
+            # Save to output directory
+            project_dir = await save_upload_to_output(project_id, temp_dir, is_dir=True)
+            
+            # Run analysis and wait for completion
+            result = await AnalysisService.getnerate_target_structure(project_dir, project_id)
+            
+            return result
+            
+    except git.GitCommandError as e:
+        raise HTTPException(status_code=400, detail=f"Git error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    
+@router.post("/migrate")
+async def migrate(requset : TargetRequest):
+    project_id = requset.project_id
+    target_structure = requset.target_structure
+    changes = requset.changes
+    try :
+        result = await AnalysisService.migrate_from_target(project_id,target_structure,changes)
+            
+            # Create ZIP file of the migrated project
+        zip_path = create_zip_file(result["output_dir"], project_id)
+            
+            # Return the ZIP file
+        response = FileResponse(
+            zip_path,
+            media_type='application/zip',
+            filename=f"{project_id}_migrated.zip"
+        )
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    

@@ -5,7 +5,6 @@ import asyncio
 from typing import Dict, List, Any, Union
 import re
 from datetime import datetime
-import logging
 from utils.react_generator_prompts import _build_generation_prompt
 import concurrent
 
@@ -25,13 +24,7 @@ class ReactComponentGenerator:
             output_dir: Directory where the React project will be created
             llm_config: Configuration for the language model
         """
-        # Setup logging
-        logging.basicConfig(
-            level=logging.INFO, 
-            format='%(asctime)s - %(levelname)s: %(message)s',
-            filename='react_generator.log'
-        )
-        self.logger = logging.getLogger(__name__)
+
         
         self.migration_file = migration_file
         self.analysis_file = analysis_file
@@ -54,7 +47,6 @@ class ReactComponentGenerator:
             bool: Whether the structure is valid
         """
         if not isinstance(data, dict):
-            self.logger.error("Migration data is not a dictionary")
             return False
         
         return True
@@ -78,10 +70,8 @@ class ReactComponentGenerator:
             
             self.flattened_migration_data = self.convert_to_folder_structure()
             print("Succesfull : " + str(self.flattened_migration_data))
-            self.logger.info("Data loaded successfully")
         
         except Exception as e:
-            self.logger.error(f"Error loading data: {e}")
             raise
     def convert_to_folder_structure(self):
         data = self.migration_data
@@ -193,7 +183,7 @@ class ReactComponentGenerator:
                 try:
                     await self._generate_single_file_async(value, current_path)
                 except Exception as e:
-                    self.logger.error(f"Failed to generate file {current_path}: {e}")
+                    print(f"Error generating file {key}: {e}")
                 return None
 
             # Directory processing
@@ -232,10 +222,8 @@ class ReactComponentGenerator:
             # Wait for all tasks to complete
             await asyncio.gather(*tasks)
             
-            self.logger.info("Parallel project generation completed successfully")
         
         except Exception as e:
-            self.logger.error(f"Project file generation failed: {e}")
             raise
 
     async def _generate_single_file_async(self, file_info: Dict[str, Any], file_path: Union[str, Path]):
@@ -267,10 +255,8 @@ class ReactComponentGenerator:
             with open(file_path, 'w', encoding='utf-8') as f:
                 f.write(generated_code)
             
-            self.logger.info(f"Generated: {file_path}")
         
         except Exception as e:
-            self.logger.error(f"Error generating {file_path}: {e}")
             raise
 
     async def generate_project(self):
@@ -286,5 +272,4 @@ class ReactComponentGenerator:
             await self._generate_project_files()
         
         except Exception as e:
-            self.logger.error(f"Project generation failed: {e}")
             raise

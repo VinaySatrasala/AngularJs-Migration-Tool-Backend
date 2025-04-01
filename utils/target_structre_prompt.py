@@ -238,6 +238,7 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
 ## Example react strutre (Just an exmple no mandetory that it should be same as this)
 ```json
 {
+  # ** public/index.html Must include in every structure mandetory **
   "public": {
     "index.html": {
       "file_name": "index.html",
@@ -245,7 +246,6 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
       "file_type": "html",
       "dependencies": [],
       "source_files": [
-        "index.html"
       ],
       "description": "Root HTML file where React mounts the app.",
       "migration_suggestions": "Ensure this file includes a <div id='root'></div> for React to render the application. Remove AngularJS-specific script tags."

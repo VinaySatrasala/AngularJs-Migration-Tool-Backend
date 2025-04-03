@@ -235,21 +235,19 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
 ```
 
 
-## Example react strutre (Just an exmple no mandetory that it should be same as this)
+## Example react strutre (must follow hirarchy)
 ```json
 {
-  # ** public/index.html Must include in every structure mandetory **
-  "public": {
-    "index.html": {
-      "file_name": "index.html",
-      "relative_path": "public/index.html",
-      "file_type": "html",
-      "dependencies": [],
-      "source_files": [
-      ],
-      "description": "Root HTML file where React mounts the app.",
-      "migration_suggestions": "Ensure this file includes a <div id='root'></div> for React to render the application. Remove AngularJS-specific script tags."
-    }
+  # index.html Must include in every structure mandetory **
+  "index.html": {
+    "file_name": "index.html",
+    "relative_path": "public/index.html",
+    "file_type": "html",
+    "dependencies": [],
+    "source_files": [
+    ],
+    "description": "Root HTML file where React mounts the app.",
+    "migration_suggestions": "Ensure this file includes a <div id='root'></div> for React to render the application. Remove AngularJS-specific script tags."
   }
   "package.json": {
     "file_name": "package.json",
@@ -258,7 +256,8 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
     "dependencies": [
       "react",
       "react-dom",
-      "react-router-dom"
+      "react-router-dom",
+      "react-scripts"
     ],
     "source_files" : [
       "package.json"
@@ -267,9 +266,9 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
     "migration_suggestions": "Replace AngularJS dependencies with React equivalents. Ensure required libraries for routing and state management are installed."
   },
   "src": {
-    "index.js": {
-      "file_name": "index.js",
-      "relative_path": "src/index.js",
+    "main.js": {
+      "file_name": "main.js",
+      "relative_path": "src/main.js",
       "file_type": "js",
       "dependencies": [
         "react",

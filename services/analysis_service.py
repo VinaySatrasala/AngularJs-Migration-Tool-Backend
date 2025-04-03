@@ -136,9 +136,7 @@ class AnalysisService:
             
             
             return {
-                "status": "success",
                 "project_id": project_id,
-                "analysis_results": analysis_results,
                 "target_structure": target_structure,
             }
         except Exception as e:

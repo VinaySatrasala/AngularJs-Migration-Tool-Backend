@@ -5,8 +5,10 @@ import asyncio
 from typing import Dict, List, Any, Union
 import re
 from datetime import datetime
+from services.db_service import MigrationDBService
 from utils.react_generator_prompts import _build_generation_prompt
 import concurrent
+from sqlalchemy.orm import Session
 
 class ReactComponentGenerator:
     """
@@ -14,7 +16,7 @@ class ReactComponentGenerator:
     Focuses on creating a clean, structured React project.
     """
     
-    def __init__(self, migration_file: str, analysis_file: str, output_dir: Union[str, Path], llm_config: Any):
+    def __init__(self,db : Session,output_dir: Union[str, Path], llm_config: Any,project_id : str,instructions : str = ""):
         """
         Initialize the React project generator.
         
@@ -26,11 +28,12 @@ class ReactComponentGenerator:
         """
 
         
-        self.migration_file = migration_file
-        self.analysis_file = analysis_file
+
         self.output_dir = Path(output_dir)
         self.llm_config = llm_config
-        
+        self.db = db
+        self.project_id = project_id
+        self.instructions = instructions
         # Data containers
         self.migration_data = {}
         self.analysis_data = {}
@@ -53,26 +56,35 @@ class ReactComponentGenerator:
     
     async def load_data(self):
         """
-        Load migration and analysis data with comprehensive error handling.
+        Load migration and analysis data from the database with comprehensive error handling.
         """
         try:
-            # Load migration data
-            with open(self.migration_file, 'r', encoding='utf-8') as f:
-                self.migration_data = json.load(f)
+            # Load migration (target structure) data from DB
+            structure_record = MigrationDBService.get_target_structure(self.db, self.project_id)
+            if not structure_record:
+                raise ValueError(f"No migration structure found in DB for project_id: {self.project_id}")
+            self.migration_data = structure_record["structure_data"]
+
+            # Load analysis data from DB
+            analysis_record = MigrationDBService.get_analysis(self.db, self.project_id)
+            if not analysis_record:
+                raise ValueError(f"No analysis data found in DB for project_id: {self.project_id}")
             
-            # Load analysis data
-            with open(self.analysis_file, 'r', encoding='utf-8') as f:
-                self.analysis_data = json.load(f)
-            
+            # Remove "content" from each file entry in analysis data
+            analysis_data = analysis_record["analysis_data"]
+            self.analysis_data = analysis_data
+
             # Validate structure
             if not self._validate_migration_structure(self.migration_data):
                 raise ValueError("Invalid migration data structure")
-            
+
             self.flattened_migration_data = self.convert_to_folder_structure()
-            print("Succesfull : " + str(self.flattened_migration_data))
-        
+            # print("Success: " + str(self.flattened_migration_data))
+
         except Exception as e:
+            # print(f"Error loading data: {str(e)}")
             raise
+
     def convert_to_folder_structure(self):
         data = self.migration_data
         folder_structure = {}
@@ -243,13 +255,13 @@ class ReactComponentGenerator:
             )
             
             # Prepare generation prompt
-            prompt = _build_generation_prompt(source_content, file_info,self.flattened_migration_data)
-            print(prompt)
+            prompt = _build_generation_prompt(source_content, file_info,self.flattened_migration_data,self.instructions)
+            # print(prompt)
             # Generate code using LLM
-            response = self.llm_config._langchain_llm.predict(prompt)
-            print(response)
+            response = self.llm_config._langchain_llm.invoke(prompt)
+            # print(response)
             # Extract and clean code
-            generated_code = self._extract_code(response, file_info['file_type'])
+            generated_code = self._extract_code(response.content, file_info['file_type'])
             
             # Write to file
             with open(file_path, 'w', encoding='utf-8') as f:

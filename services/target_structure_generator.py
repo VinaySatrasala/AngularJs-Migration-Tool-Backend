@@ -2,7 +2,9 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Union
+from services.db_service import MigrationDBService
 from utils.target_structre_prompt import target_prompt
+from sqlalchemy.orm import Session
 
 # logger = logging.getLogger(__name__)
 
@@ -15,36 +17,43 @@ class ReactMigrationStructureGenerator:
     and routing approach for the migrated application.
     """
     
-    def __init__(self, analysis_file: str, llm_config: Any, project_id: str):
+    def __init__(self, db: Session, llm_config: Any, project_id: str,instructions : str = ""):
         """
         Initialize the ReactMigrationStructureGenerator.
-        
+
         Args:
-            analysis_file: Path to the JSON file containing AngularJS project analysis
+            db: SQLAlchemy DB session
             llm_config: Configuration for the language model to use
             project_id: Unique identifier for the project
         """
-        self.analysis_file = analysis_file
+        self.db = db
         self.project_id = project_id
         self.analysis_data = None
-
         self.llm_config = llm_config
+        self.instructions = instructions
+
     async def load_analysis_data(self) -> Dict[str, Any]:
         """
-        Load the AngularJS project analysis from the JSON file.
-        
+        Load the AngularJS project analysis from the database and remove file content.
+
         Returns:
-            Dict containing the analysis data
+            Dict containing the analysis data without file contents
         """
-        if not os.path.exists(self.analysis_file):
-            raise FileNotFoundError(f"Analysis file not found: {self.analysis_file}")
-            
-        try:
-            with open(self.analysis_file, 'r') as f:
-                self.analysis_data = json.load(f)
-            return self.analysis_data
-        except json.JSONDecodeError:
-            raise ValueError(f"Invalid JSON in analysis file: {self.analysis_file}")
+        analysis_record = MigrationDBService.get_analysis(self.db, self.project_id)
+        if not analysis_record:
+            raise ValueError(f"No analysis data found in DB for project_id: {self.project_id}")
+        
+        analysis_data = analysis_record["analysis_data"]
+
+        # Remove "content" field from each file entry
+        for file_path, file_info in analysis_data.items():
+            if isinstance(file_info, dict) and "content" in file_info:
+                file_info.pop("content")
+
+        self.analysis_data = analysis_data
+        return self.analysis_data
+
+
     
     async def generate_react_structure(self) -> Dict[str, Any]:
         """
@@ -70,11 +79,6 @@ class ReactMigrationStructureGenerator:
             validated_structure = self._validate_structure(ai_response)
             # Save the structure
             # logger.info("Saving React migration structure...")
-            output_dir = Path(self.analysis_file).parent.parent
-            output_file = output_dir / "react_migration_structure.json"
-            
-            with open(output_file, 'w') as f:
-                json.dump(validated_structure, f, indent=2)
                 
             # logger.info(f"React structure saved to: {output_file}")
             return validated_structure
@@ -93,7 +97,8 @@ class ReactMigrationStructureGenerator:
         prompt = target_prompt()
 
         # Format the prompt with the analysis data
-        formatted_prompt = prompt.replace("{json_data}", json.dumps(self.analysis_data, indent=2))
+        formatted_prompt = prompt.replace("{json_data}", json.dumps(self.analysis_data, indent=2)).replace("{instructions}", self.instructions or "")
+        
         return formatted_prompt
     
     async def _query_llm(self, prompt: str) -> Dict[str, Any]:
@@ -112,8 +117,8 @@ class ReactMigrationStructureGenerator:
             
             # Add system message to the prompt
             full_prompt = "You are a React migration expert. Always respond with valid JSON only.\n\n" + prompt
-            response_text = await self.llm_config._langchain_llm.apredict(full_prompt)
-            response_text = response_text.strip()
+            response_text = await self.llm_config._langchain_llm.ainvoke(full_prompt)
+            response_text = response_text.content.strip()
             
             # logger.info("Received response from LLM")
             

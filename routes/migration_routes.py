@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, BackgroundTasks, Depends
+from fastapi import APIRouter, Form, HTTPException, UploadFile, BackgroundTasks, Depends
 from starlette.responses import FileResponse, Response
 import tempfile
 import shutil
@@ -58,7 +58,7 @@ def create_zip_file(output_dir: str, project_id: str) -> str:
     zip_path = os.path.join(OUTPUT_DIR, f"{project_id}_migrated.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         # Get the react_output directory path
-        react_output_dir = os.path.join(output_dir, "react_output")
+        react_output_dir = os.path.join(output_dir)
         
         # Walk through the react_output directory and add files to zip
         for root, _, files in os.walk(react_output_dir):
@@ -72,6 +72,7 @@ def create_zip_file(output_dir: str, project_id: str) -> str:
 @router.post("/github", response_class=FileResponse)
 async def migrate_from_github(request: GitHubRequest, background_tasks: BackgroundTasks) -> Response:
     github_url = request.github_url
+    instructions = request.instructions
     project_id = generate_project_id()
     project_dir = None
     zip_path = None
@@ -84,7 +85,7 @@ async def migrate_from_github(request: GitHubRequest, background_tasks: Backgrou
             project_dir = await save_upload_to_output(project_id, temp_dir, is_dir=True)
             
             # Run analysis and wait for completion
-            result = await AnalysisService.migrate_project(project_dir, project_id)
+            result = await AnalysisService.migrate_project(project_dir, project_id,instructions)
             
             # Create ZIP file of the migrated project
             zip_path = create_zip_file(result["output_dir"], project_id)
@@ -110,7 +111,7 @@ async def migrate_from_github(request: GitHubRequest, background_tasks: Backgrou
 
 
 @router.post("/zip", response_class=FileResponse)
-async def migrate_from_zip(file: UploadFile, background_tasks: BackgroundTasks) -> Response:
+async def migrate_from_zip(file: UploadFile,background_tasks: BackgroundTasks,instructions: Optional[str] = Form(None)) -> Response:
     project_id = generate_project_id()
     project_dir = None
     zip_path = None
@@ -134,7 +135,7 @@ async def migrate_from_zip(file: UploadFile, background_tasks: BackgroundTasks) 
             zip_ref.extractall(project_dir)
         
         # Run analysis and wait for completion
-        result = await AnalysisService.migrate_project(project_dir, project_id)
+        result = await AnalysisService.migrate_project(project_dir, project_id,instructions)
         
         # Create ZIP file of the migrated project
         zip_path = create_zip_file(result["output_dir"], project_id)
@@ -160,7 +161,7 @@ async def migrate_from_zip(file: UploadFile, background_tasks: BackgroundTasks) 
 
 
 @router.post("/zip/analyze", response_model=Dict[str, Any])
-async def analyze_zip(file: UploadFile, background_tasks: BackgroundTasks) -> Dict[str, Any]:
+async def analyze_zip(file: UploadFile,background_tasks: BackgroundTasks,instructions: Optional[str] = Form(None)) -> Dict[str, Any]:
     project_id = generate_project_id()
     project_dir = None
     temp_path = None
@@ -183,7 +184,7 @@ async def analyze_zip(file: UploadFile, background_tasks: BackgroundTasks) -> Di
             zip_ref.extractall(project_dir)
         
         # Run analysis and wait for completion
-        result = await AnalysisService.generate_target_structure(project_dir, project_id)
+        result = await AnalysisService.generate_target_structure(project_dir, project_id,instructions)
         
         # Add a background task to clean up files after sending response
         background_tasks.add_task(cleanup_uploads, project_id)
@@ -202,10 +203,12 @@ async def analyze_zip(file: UploadFile, background_tasks: BackgroundTasks) -> Di
 @router.post("/github/analyze", response_model=Dict[str, Any])
 async def analyze_github(request: GitHubRequest, background_tasks: BackgroundTasks) -> Dict[str, Any]:
     github_url = request.github_url
+    instructions = request.instructions
     project_id = generate_project_id()
     project_dir = None
     
     try:
+        print(instructions)
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone the repository
             git.Repo.clone_from(github_url, temp_dir)
@@ -213,7 +216,7 @@ async def analyze_github(request: GitHubRequest, background_tasks: BackgroundTas
             project_dir = await save_upload_to_output(project_id, temp_dir, is_dir=True)
             
             # Run analysis and wait for completion
-            result = await AnalysisService.generate_target_structure(project_dir, project_id)
+            result = await AnalysisService.generate_target_structure(project_dir, project_id,instructions)
             
             # Add a background task to clean up files after sending response
             background_tasks.add_task(cleanup_uploads, project_id)
@@ -232,12 +235,10 @@ async def analyze_github(request: GitHubRequest, background_tasks: BackgroundTas
 async def migrate(request: TargetRequest, background_tasks: BackgroundTasks) -> Response:
     project_id = request.project_id
     target_structure = request.target_structure
-    changes = request.changes
-    project_dir = os.path.join(UPLOAD_DIR, project_id)
     zip_path = None
     
     try:
-        result = await AnalysisService.migrate_from_target(project_id, target_structure, changes)
+        result = await AnalysisService.migrate_from_target(project_id, target_structure)
         
         # Create ZIP file of the migrated project
         zip_path = create_zip_file(result["output_dir"], project_id)

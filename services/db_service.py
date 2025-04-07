@@ -46,7 +46,7 @@ class MigrationDBService:
             return None
 
     @staticmethod
-    def save_target_structure(db: Session, project_id: str, structure_data: Dict[str, Any]) -> Optional[TargetStructure]:
+    def save_target_structure(db: Session, project_id: str, structure_data: Dict[str, Any], instructions : str = "") -> Optional[TargetStructure]:
         """
         Save or update target structure data
         Args:
@@ -79,7 +79,8 @@ class MigrationDBService:
                 # Create new structure
                 db_structure = TargetStructure(
                     project_id=project_id,
-                    structure_data=structure_data
+                    structure_data=structure_data,
+                    instructions=instructions,
                 )
                 db.add(db_structure)
                 db.commit()
@@ -115,6 +116,7 @@ class MigrationDBService:
             db_structure = db.query(TargetStructure).filter(TargetStructure.project_id == project_id).first()
             return {
                 "structure_data": db_structure.structure_data,
+                "instructions": db_structure.instructions,
                 "created_at": str(db_structure.created_at),
                 "updated_at": str(db_structure.updated_at)
             } if db_structure else None

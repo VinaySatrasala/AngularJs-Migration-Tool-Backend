@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, JSON, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -20,5 +20,6 @@ class TargetStructure(Base):
     project_id = Column(String(255), nullable=False)
     analysis_id = Column(Integer, ForeignKey('project_analysis.id'))
     structure_data = Column(JSON)
+    instructions = Column(Text)  # New column here
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

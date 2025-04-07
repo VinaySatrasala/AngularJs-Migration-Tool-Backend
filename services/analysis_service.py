@@ -16,7 +16,7 @@ class AnalysisService:
     """Service to manage project analysis tasks"""
     
     @staticmethod
-    async def migrate_project(project_path: str, project_id: str) -> Dict[str, Any]:
+    async def migrate_project(project_path: str, project_id: str,instructions : str = "") -> Dict[str, Any]:
         """
         Analyze a project at the given path and return the analysis results
         Args:
@@ -28,19 +28,11 @@ class AnalysisService:
             # Create analysis directory if it doesn't exist
             output_dir = Path(f"output/{project_id}")
             output_dir.mkdir(parents=True, exist_ok=True)
-        
-            analysis_dir = output_dir / "analysis"
-            analysis_dir.mkdir(parents=True, exist_ok=True)
-            
-            analysis_file = analysis_dir / f"{project_id}_analysis.json"
-            analysis_file_content = analysis_dir / f"{project_id}_analysis_with_content.json"
-            react_structure_file = output_dir / "react_migration_structure.json"
-            
+                    
             # Run the analyzer
             analyzer = AngularProjectAnalyzer(
                 project_path=project_path,
-                project_id=project_id,
-                output_file=str(analysis_file)
+                instructions = instructions
             )
             analysis_results = await analyzer.analyze_project()
             
@@ -51,9 +43,10 @@ class AnalysisService:
             
             # Generate target structure
             target_generator = ReactMigrationStructureGenerator(
-                analysis_file=str(analysis_file),
+                db = db,
                 llm_config=llm_config,
                 project_id=project_id,
+                instructions = instructions
             )
             target_structure = await target_generator.generate_react_structure()
             
@@ -64,10 +57,11 @@ class AnalysisService:
             
             # Generate React components
             react_generator = ReactComponentGenerator(
-                migration_file=str(react_structure_file),
-                analysis_file=str(analysis_file_content),
-                output_dir=output_dir / "react_output",
-                llm_config=llm_config
+                db=db,
+                output_dir=output_dir,
+                llm_config=llm_config,
+                project_id=project_id,
+                instructions = instructions
             )
             await react_generator.generate_project()
             
@@ -87,14 +81,14 @@ class AnalysisService:
                 db.rollback()
             except:
                 pass
-            print(f"Error analyzing project: {str(e)}")
+            # print(f"Error analyzing project: {str(e)}")
             raise e
         finally:
             db.close()
             
     
     @staticmethod
-    async def generate_target_structure(project_path : str, project_id : str) -> Dict[str,Any]:
+    async def generate_target_structure(project_path : str, project_id : str, instructions : str = "") -> Dict[str,Any]:
         """
             Making editable target structre by the user
             
@@ -102,21 +96,11 @@ class AnalysisService:
         
         # Generating analysis
         db = next(get_db())
-        try:
-            # Create analysis directory if it doesn't exist
-            output_dir = Path(f"output/{project_id}")
-            output_dir.mkdir(parents=True, exist_ok=True)
-        
-            analysis_dir = output_dir / "analysis"
-            analysis_dir.mkdir(parents=True, exist_ok=True)
-            
-            analysis_file = analysis_dir / f"{project_id}_analysis.json"
-            
+        try:            
             # Run the analyzer
             analyzer = AngularProjectAnalyzer(
                 project_path=project_path,
-                project_id=project_id,
-                output_file=str(analysis_file)
+                instructions = instructions
             )
             analysis_results = await analyzer.analyze_project()
             
@@ -127,14 +111,16 @@ class AnalysisService:
             
             # Generate target structure
             target_generator = ReactMigrationStructureGenerator(
-                analysis_file=str(analysis_file),
+                db = db,
                 llm_config=llm_config,
                 project_id=project_id,
+                instructions = instructions
             )
             target_structure = await target_generator.generate_react_structure()
             
             # Save target structure to database and get the saved instance
-            structure_instance = MigrationDBService.save_target_structure(db, project_id, target_structure)
+            # print("here" + instructions)
+            structure_instance = MigrationDBService.save_target_structure(db, project_id, target_structure, instructions)
             if not structure_instance:
                 raise Exception("Failed to save target structure to database")
             
@@ -148,57 +134,51 @@ class AnalysisService:
                 db.rollback()
             except:
                 pass
-            print(f"Error analyzing project: {str(e)}")
+            # print(f"Error analyzing project: {str(e)}")
             raise e
         finally:
             db.close()
        
-    @staticmethod 
-    async def migrate_from_target(project_id : str , target_structure : Dict[str,any],changes : bool) -> Dict[str,any]:
+    @staticmethod
+    async def migrate_from_target(project_id: str, target_structure: Dict[str, Any]) -> Dict[str, Any]:
         db = next(get_db())
         try:
-            # Create analysis directory if it doesn't exist
+            # Define output directory (React code will be generated here)
             output_dir = Path(f"output/{project_id}")
+            output_dir.mkdir(parents=True, exist_ok=True)
 
-        
-            analysis_dir = output_dir / "analysis"
+            # Save target structure to DB if there are any changes from frontend
+            structure_instance = MigrationDBService.save_target_structure(db, project_id, target_structure)
+            if not structure_instance:
+                raise Exception("Failed to save target structure to database")
             
-            analysis_file_content = analysis_dir / f"{project_id}_analysis_with_content.json"
-            react_structure_file = output_dir / "react_migration_structure.json"
-            
-            # if any changes made to target_strucutre in front end
-            if changes : 
-                # Save target structure to database and get the saved instance
-                structure_instance = MigrationDBService.save_target_structure(db, project_id, target_structure)
-                if not structure_instance:
-                    raise Exception("Failed to save target structure to database")
-                # Write changed target_structure to that file also overwrting exisited
-                with open(react_structure_file, 'w') as file:
-                    json.dump(target_structure, file)
-                
-            
-            # Generate React components
+            target_data = MigrationDBService.get_target_structure(db, project_id)
+            # print(target_data)
+            # Initialize generator and trigger code generation
             react_generator = ReactComponentGenerator(
-                migration_file=str(react_structure_file),
-                analysis_file=str(analysis_file_content),
-                output_dir=output_dir / "react_output",
-                llm_config=llm_config
+                db=db,
+                output_dir=output_dir,
+                llm_config=llm_config,
+                project_id=project_id,
+                instructions = target_data.get("instructions")
+
             )
             await react_generator.generate_project()
-            
+
             return {
                 "status": "success",
                 "project_id": project_id,
                 "target_structure": target_structure,
                 "output_dir": str(output_dir)
             }
+
         except Exception as e:
             try:
                 db.rollback()
             except:
                 pass
-            print(f"Error analyzing project: {str(e)}")
+            # print(f"Error during migration: {str(e)}")
             raise e
         finally:
             db.close()
-        
+    

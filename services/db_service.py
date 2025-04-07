@@ -132,3 +132,21 @@ class MigrationDBService:
         except Exception as e:
             print(f"Error checking target structure existence: {str(e)}")
             return False
+    
+    @staticmethod
+    def delete_project_data(db: Session, project_id: str) -> None:
+        """Delete analysis and target structure data for a given project_id"""
+        try:
+            db_structure = db.query(TargetStructure).filter(TargetStructure.project_id == project_id).first()
+            if db_structure:
+                db.delete(db_structure)
+            
+            db_analysis = db.query(ProjectAnalysis).filter(ProjectAnalysis.project_id == project_id).first()
+            if db_analysis:
+                db.delete(db_analysis)
+            
+            db.commit()
+        except Exception as e:
+            print(f"Error deleting project data: {str(e)}")
+            db.rollback()
+

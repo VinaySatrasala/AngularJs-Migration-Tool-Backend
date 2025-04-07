@@ -71,6 +71,9 @@ class AnalysisService:
             )
             await react_generator.generate_project()
             
+            # Remove from database after successful generation
+            # MigrationDBService.delete_project_data(db, project_id)
+            
             return {
                 "status": "success",
                 "project_id": project_id,
@@ -89,6 +92,7 @@ class AnalysisService:
         finally:
             db.close()
             
+    
     @staticmethod
     async def generate_target_structure(project_path : str, project_id : str) -> Dict[str,Any]:
         """
@@ -148,7 +152,8 @@ class AnalysisService:
             raise e
         finally:
             db.close()
-        
+       
+    @staticmethod 
     async def migrate_from_target(project_id : str , target_structure : Dict[str,any],changes : bool) -> Dict[str,any]:
         db = next(get_db())
         try:

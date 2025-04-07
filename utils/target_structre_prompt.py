@@ -371,8 +371,8 @@ Carefully analyze the provided AngularJS project structure and generate a meticu
     }
   }
 }
-
+User specific instructions ```{instructions}```
 ```
 The output should be a complete and ready-to-implement migration plan that a developer can follow step by step to convert the AngularJS application to React.
-Here is the analysis ```json{json_data}```
+Here is the analysis ```json{json_data} ```
         """

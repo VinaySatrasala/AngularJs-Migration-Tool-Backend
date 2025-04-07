@@ -1,6 +1,6 @@
 from typing import Any, Dict  
 
-def _build_generation_prompt(source_content: str, file_info: Dict[str, Any],flattend_migration_data:Dict[str, Any]) -> str:
+def _build_generation_prompt(source_content: str, file_info: Dict[str, Any],flattend_migration_data:Dict[str, Any],instructions : str = "") -> str:
     """
     Build a structured prompt for generating a React file based on AngularJS source content.
 
@@ -11,7 +11,7 @@ def _build_generation_prompt(source_content: str, file_info: Dict[str, Any],flat
     Returns:
         A well-structured prompt string to guide the AI in generating an optimized React file.
     """
-    
+    instruction_text = f"\nAdditional instructions: {instructions}" if instructions else ""
     # Base prompt template
     base_prompt = f"""
     You are a React migration assistant. Convert the given AngularJS file into an optimized React {file_info['file_type']} file while following best practices.
@@ -59,6 +59,7 @@ def _build_generation_prompt(source_content: str, file_info: Dict[str, Any],flat
     - Use either browser router or router dont use both
     - Dont add unnecessrt comments and place holders
     - Dont use lazy loading import components properly
+    # Additional instructions: {instruction_text}
 
     """
 

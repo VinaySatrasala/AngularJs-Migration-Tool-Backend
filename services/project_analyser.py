@@ -23,14 +23,12 @@ class AngularProjectAnalyzer:
     Analyzer for AngularJS projects that creates a structured analysis of the codebase.
     Uses LLMs to generate comprehensive analysis for migration planning.
     """
-    def __init__(self, project_path: str, project_id: str = None, output_file: str = "analysis.json"):
+    def __init__(self, project_path: str,instructions : str = ""):
         self.project_path = Path(project_path)
-        self.project_id = project_id
-        self.output_file = output_file
-        self.output_file_with_content = output_file.replace('.json', '_with_content.json')
         self.file_extensions = {'.js', '.html', '.css', '.json', '.md','.cshtml'}
         self.analysis_results = {}
         self.llm = llm_config._langchain_llm
+        self.instructions = instructions
         self.patterns = {
             'angular_module': re.compile(r'angular\.module\([\'"]([^\'"]+)[\'"]'),
             'angular_controller': re.compile(r'\.controller\([\'"]([^\'"]+)[\'"]'),
@@ -50,11 +48,11 @@ class AngularProjectAnalyzer:
 
     async def analyze_project(self) -> Dict[str, Any]:
         """Main method to analyze the entire AngularJS project"""
-        print(f"Starting analysis of project at: {self.project_path}")
+        # print(f"Starting analysis of project at: {self.project_path}")
         
         # 1. Gather all relevant files
         all_files = self._gather_files()
-        print(f"Found {len(all_files)} files to analyze")
+        # print(f"Found {len(all_files)} files to analyze")
         
         # 2. Process each file to extract basic information
         with ThreadPoolExecutor() as executor:
@@ -80,26 +78,7 @@ class AngularProjectAnalyzer:
         # 5. Save both versions of results
         self.analysis_results = file_info_results
         
-        # Save version with content
-        with open(self.output_file_with_content, 'w', encoding='utf-8') as f:
-            json.dump(file_info_results, f, indent=2)
-            
-        # Save version without content
-        results_without_content = {}
-        for path, info in file_info_results.items():
-            info_copy = info.copy()
-            if 'content' in info_copy:
-                del info_copy['content']
-            results_without_content[path] = info_copy
-            
-        with open(self.output_file, 'w', encoding='utf-8') as f:
-            json.dump(results_without_content, f, indent=2)
-        
-        print(f"Analysis complete. Results saved to:")
-        print(f"- Without content: {self.output_file}")
-        print(f"- With content: {self.output_file_with_content}")
-        
-        return results_without_content
+        return file_info_results
     def _gather_files(self) -> List[Path]:
         """Gather all relevant files from the project directory"""
         all_files = []
@@ -131,7 +110,7 @@ class AngularProjectAnalyzer:
             }
             
         except Exception as e:
-            print(f"Error processing file {file_path}: {str(e)}")
+            # print(f"Error processing file {file_path}: {str(e)}")
             return {
                 "file_name": file_path.name,
                 "relative_path": str(file_path.relative_to(self.project_path)),
@@ -235,7 +214,7 @@ class AngularProjectAnalyzer:
         """
         try:
             # Strip leading/trailing whitespace
-            response = response.strip()
+            response = response.content.strip()
 
             # Attempt direct JSON parsing
             return json.loads(response)
@@ -264,19 +243,19 @@ class AngularProjectAnalyzer:
             
             # Select the appropriate prompt based on file type
             if file_type == 'js':
-                prompt = get_js_prompt(file_name, content)
+                prompt = get_js_prompt(file_name, content,self.instructions)
             elif file_type == 'html':
-                prompt = get_html_prompt(file_name, content)
+                prompt = get_html_prompt(file_name, content,self.instructions)
             elif file_type == 'css':
-                prompt = get_css_prompt(file_name, content)
+                prompt = get_css_prompt(file_name, content,self.instructions)
             elif file_type == 'json':
-                prompt = get_json_prompt(file_name, content)
+                prompt = get_json_prompt(file_name, content,self.instructions)
             else:
-                prompt = get_default_prompt(file_name, content, file_type)
+                prompt = get_default_prompt(file_name, content, file_type,self.instructions)
             
             # Call the LLM
             response = await asyncio.to_thread(
-                self.llm.predict, 
+                self.llm.invoke, 
                 prompt
             )
             
@@ -284,18 +263,13 @@ class AngularProjectAnalyzer:
             return self.parse_json_response(response)
             
         except Exception as e:
-            print(f"Error analyzing file {file_info['relative_path']}: {str(e)}")
+            # print(f"Error analyzing file {file_info['relative_path']}: {str(e)}")
             return {
                 "analysis_error": str(e),
                 "migration_insights": "Unable to analyze due to an error."
             }
             
-    
-    def _save_analysis(self) -> None:
-        """Save analysis results to JSON file"""
-        # If project_id is provided, use it to create the analysis file name        
-        with open(self.output_file, 'w') as f:
-            json.dump(self.analysis_results, f, indent=2)
+
         
     def _extract_injections(self, content: str) -> List[str]:
         """Extract Angular dependency injection names from the content"""

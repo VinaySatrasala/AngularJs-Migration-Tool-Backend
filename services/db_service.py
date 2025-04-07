@@ -46,7 +46,7 @@ class MigrationDBService:
             return None
 
     @staticmethod
-    def save_target_structure(db: Session, project_id: str, structure_data: Dict[str, Any]) -> Optional[TargetStructure]:
+    def save_target_structure(db: Session, project_id: str, structure_data: Dict[str, Any], instructions : str = "") -> Optional[TargetStructure]:
         """
         Save or update target structure data
         Args:
@@ -79,7 +79,8 @@ class MigrationDBService:
                 # Create new structure
                 db_structure = TargetStructure(
                     project_id=project_id,
-                    structure_data=structure_data
+                    structure_data=structure_data,
+                    instructions=instructions,
                 )
                 db.add(db_structure)
                 db.commit()
@@ -115,6 +116,7 @@ class MigrationDBService:
             db_structure = db.query(TargetStructure).filter(TargetStructure.project_id == project_id).first()
             return {
                 "structure_data": db_structure.structure_data,
+                "instructions": db_structure.instructions,
                 "created_at": str(db_structure.created_at),
                 "updated_at": str(db_structure.updated_at)
             } if db_structure else None
@@ -132,3 +134,21 @@ class MigrationDBService:
         except Exception as e:
             print(f"Error checking target structure existence: {str(e)}")
             return False
+    
+    @staticmethod
+    def delete_project_data(db: Session, project_id: str) -> None:
+        """Delete analysis and target structure data for a given project_id"""
+        try:
+            db_structure = db.query(TargetStructure).filter(TargetStructure.project_id == project_id).first()
+            if db_structure:
+                db.delete(db_structure)
+            
+            db_analysis = db.query(ProjectAnalysis).filter(ProjectAnalysis.project_id == project_id).first()
+            if db_analysis:
+                db.delete(db_analysis)
+            
+            db.commit()
+        except Exception as e:
+            print(f"Error deleting project data: {str(e)}")
+            db.rollback()
+

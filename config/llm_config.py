@@ -6,8 +6,8 @@ from pydantic_ai.models.openai import OpenAIModel
 from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.core import Settings
-from langchain_community.chat_models import AzureChatOpenAI
-from langchain_community.embeddings import AzureOpenAIEmbeddings
+from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+
 # from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from typing import Optional
 

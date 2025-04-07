@@ -208,7 +208,6 @@ async def analyze_github(request: GitHubRequest, background_tasks: BackgroundTas
     project_dir = None
     
     try:
-        print(instructions)
         with tempfile.TemporaryDirectory() as temp_dir:
             # Clone the repository
             git.Repo.clone_from(github_url, temp_dir)

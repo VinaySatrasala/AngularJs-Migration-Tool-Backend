@@ -4,11 +4,6 @@ def get_specialized_prompt(file_types, angular_code):
     # Sort file types to ensure consistent handling of combinations
     file_types.sort()
     file_types_key = "-".join(file_types)
-    print("\n" + "="*50)
-    print("📁 FILE TYPE SELECTION DEBUG INFO:")
-    print(f"📋 Selected file types: {file_types}")
-    print(f"🔑 Combination key: {file_types_key}")
-    print("="*50 + "\n")
     
     # Base prompt parts that are common to all combinations
     base_intro = """

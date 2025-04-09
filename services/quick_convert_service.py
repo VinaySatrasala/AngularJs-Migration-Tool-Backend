@@ -5,7 +5,7 @@ from utils.quick_convert_prompts import get_specialized_prompt
 
 class CodeConverter:
     def __init__(self):
-        self.agent = llm_config.get_phi_agent
+        self.agent = llm_config.phi_agent
 
     def convert(self, angular_code: str, file_types: list[str]) -> str:
         if not angular_code.strip():

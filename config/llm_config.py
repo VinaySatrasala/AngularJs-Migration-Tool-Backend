@@ -7,9 +7,11 @@ from llama_index.llms.azure_openai import AzureOpenAI
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 from llama_index.core import Settings
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
+from phi.agent import Agent
+from phi.model.azure import AzureOpenAIChat
 
 # from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class LLMConfig(BaseSettings):
     # Azure OpenAI Configuration
@@ -31,6 +33,10 @@ class LLMConfig(BaseSettings):
     # Langchain components
     _langchain_llm: Optional[AzureChatOpenAI] = PrivateAttr(default=None)
     _langchain_embedding: Optional[AzureOpenAIEmbeddings] = PrivateAttr(default=None)
+    
+    # Phi components
+    _phi_agent: Optional[Agent] = PrivateAttr(default=None)
+    _phi_model: Optional[AzureOpenAIChat] = PrivateAttr(default=None)
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -70,8 +76,6 @@ class LLMConfig(BaseSettings):
             api_version=self.azure_openai_embed_version,
         )
         
-        # self._embed_model = HuggingFaceEmbedding(model_name="sentence-transformers/all-MiniLM-L6-v2")
-
         # Configure global LlamaIndex settings
         Settings.llm = self._llm
         Settings.embed_model = self._embed_model
@@ -92,11 +96,68 @@ class LLMConfig(BaseSettings):
             openai_api_version=self.azure_openai_embed_version,
             chunk_size=1000
         )
+        
+    def init_phi_agent(self) -> None:
+        """Initialize Phi Agent with Azure OpenAI"""
+        self._phi_model = AzureOpenAIChat(
+            id=self.azure_openai_deployment_name,
+            api_key=self.azure_openai_api_key.get_secret_value(),
+            azure_endpoint=self.azure_openai_endpoint,
+            azure_deployment=self.azure_openai_deployment_name,
+        )
+        self._phi_agent = Agent(
+            model=self._phi_model,
+            markdown=True,
+            verbose=True,
+        )
+    
+    @property
+    def phi_agent(self) -> Agent:
+        """Easy access to the phi agent"""
+        if self._phi_agent is None:
+            self.init_phi_agent()
+        return self._phi_agent
+    
+    def get_phi_agent(self, **kwargs) -> Agent:
+        """Get a customized phi agent with specific settings"""
+        if not self._phi_model:
+            self._phi_model = AzureOpenAIChat(
+                id=self.azure_openai_deployment_name,
+                api_key=self.azure_openai_api_key.get_secret_value(),
+                azure_endpoint=self.azure_openai_endpoint,
+                azure_deployment=self.azure_openai_deployment_name,
+            )
+        
+        # Create a new agent with custom settings
+        agent_config = {
+            "model": self._phi_model,
+            "markdown": True,
+            "verbose": True,
+        }
+        # Update with any custom parameters
+        agent_config.update(kwargs)
+        
+        return Agent(**agent_config)
+    
+    def chat_with_phi(self, message: str, **kwargs) -> Dict[str, Any]:
+        """Quick method to chat with phi agent using a single message"""
+        agent = self.phi_agent
+        
+        # Apply any custom parameters to the run
+        run_params = {}
+        run_params.update(kwargs)
+        
+        # Run the agent with the message
+        response = agent.run(message, **run_params)
+        return response
 
 # ✅ Create singleton instance
 llm_config = LLMConfig()
+
+# Initialize core components
 llm_config.init_llamaindex()
 llm_config.init_langchain()
+# Phi agent will be lazily initialized when first accessed
 
 # ✅ Keep the Pydantic model (used by LlamaIndex)
 pydantic_ai_model = llm_config.get_pydantic_model(
@@ -105,3 +166,12 @@ pydantic_ai_model = llm_config.get_pydantic_model(
     endpoint=llm_config.azure_openai_endpoint,
     deployment_name=llm_config.azure_openai_deployment_name
 )
+
+# Example usage:
+# # Quick chat with phi agent
+# response = llm_config.chat_with_phi("Explain quantum computing in simple terms")
+# print(response["output"])
+# 
+# # Get a custom phi agent with specific settings
+# custom_agent = llm_config.get_phi_agent(markdown=False, storage=my_storage)
+# custom_response = custom_agent.run("Analyze this code...")

@@ -9,6 +9,8 @@ import uuid
 import zipfile
 from typing import Dict, Any, Optional
 
+from services.quick_convert_service import CodeConverter
+from models.ConvertRequest import ConvertRequest
 from models.TargetRequest import TargetRequest
 from models.github_request import GitHubRequest
 from services.analysis_service import AnalysisService
@@ -21,7 +23,6 @@ from utils.cleanup_utils import (
     cleanup_temp_file,
     perform_full_cleanup
 )
-
 
 router = APIRouter(prefix="/api/v1/migrator", tags=["migration"])
 
@@ -259,4 +260,15 @@ async def migrate(request: TargetRequest, background_tasks: BackgroundTasks) -> 
         raise HTTPException(status_code=404, detail=f"Project with ID {project_id} not found")
     except Exception as e:
         await perform_full_cleanup(project_id, zip_path)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/convert")
+async def convert_code(request: ConvertRequest):
+    try:
+        converter = CodeConverter()
+        result = converter.convert(request.angular_code, request.fileTypes)
+        return {"react_code": result}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
